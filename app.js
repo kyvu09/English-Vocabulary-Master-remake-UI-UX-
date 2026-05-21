@@ -169,21 +169,22 @@ function updateAccountPreview() {
   }
 }
 
+let accountModalInstance = null;
+
 function openAccountModal() {
   if (!refs.accountModal || !auth.currentUser) return;
 
   fillAccountForm(auth.currentUser);
-  refs.accountModal.classList.add("show");
-  refs.accountModal.setAttribute("aria-hidden", "false");
-  document.body.classList.add("no-scroll");
+  if (!accountModalInstance) {
+    accountModalInstance = new bootstrap.Modal(refs.accountModal, { backdrop: true });
+  }
+  accountModalInstance.show();
   refs.accountDisplayName?.focus();
 }
 
 function closeAccountModal() {
-  if (!refs.accountModal) return;
-  refs.accountModal.classList.remove("show");
-  refs.accountModal.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("no-scroll");
+  if (!accountModalInstance) return;
+  accountModalInstance.hide();
   setStatus(refs.accountStatus);
 }
 
@@ -285,18 +286,21 @@ function bindGlobalEvents() {
   refs.accountCancelBtn?.addEventListener("click", closeAccountModal);
   refs.accountModalCloseBtn?.addEventListener("click", closeAccountModal);
 
-  refs.accountModal?.addEventListener("click", (event) => {
-    if (event.target === refs.accountModal) {
-      closeAccountModal();
-    }
+  refs.accountModal?.addEventListener("hidden.bs.modal", () => {
+    document.body.classList.remove("no-scroll");
+    setStatus(refs.accountStatus);
   });
 
   refs.accountDisplayName?.addEventListener("input", updateAccountPreview);
   refs.accountPhotoUrl?.addEventListener("input", updateAccountPreview);
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && refs.accountModal?.classList.contains("show")) {
-      closeAccountModal();
+    if (event.key === "Escape") {
+      const openModal = document.querySelector(".modal.show");
+      if (openModal) {
+        const modal = bootstrap.Modal.getInstance(openModal);
+        modal?.hide();
+      }
     }
   });
 
@@ -307,6 +311,38 @@ function bindGlobalEvents() {
     window.vocabSearchQuery = keyword;
     router.navigateTo("vocabulary");
   });
+
+  // Theme toggle (capture phase to intercept before router)
+  document.addEventListener("click", (e) => {
+    const themesBtn = e.target.closest('[data-page="themes"]');
+    if (!themesBtn) return;
+    e.stopPropagation();
+    toggleTheme();
+    // Close sidebar on mobile
+    if (window.innerWidth <= 768) {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (sidebar) sidebar.classList.remove('show');
+      if (overlay) overlay.classList.remove('show');
+      document.getElementById('hamburgerBtn')?.classList.remove('is-active');
+      document.body.classList.remove('no-scroll');
+    }
+  }, true);
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute("data-theme") === "dark";
+  const newTheme = isDark ? "light" : "dark";
+  html.setAttribute("data-theme", newTheme);
+  localStorage.setItem("app-theme", newTheme);
+}
+
+function initTheme() {
+  const saved = localStorage.getItem("app-theme");
+  if (saved === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
+  }
 }
 
 function startRouterOnce() {
@@ -316,6 +352,8 @@ function startRouterOnce() {
 }
 
 function init() {
+  initTheme();
+
   if (!firebaseReady || !auth || !db) {
     showFatalMessage("Thiếu hoặc sai cấu hình Firebase trong firebase-config.js.");
     return;

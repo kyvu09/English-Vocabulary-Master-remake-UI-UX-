@@ -81,3 +81,27 @@
     --sidebar-width: 0;
   }
 }
+
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --surface: rgba(30, 41, 59, 0.85);
+  --surface-strong: #1e293b;
+  --surface-soft: #1a2332;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --line: #334155;
+  --line-soft: #1e293b;
+
+  --primary-soft: #1e3a5f;
+  --success-bg: #14532d;
+  --warning-bg: #422006;
+  --danger-bg: #450a0a;
+  --info-bg: #0c4a6e;
+
+  --shadow-1: 0 4px 8px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-3: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --shadow-soft: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  --shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
+  --shadow-hover: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}

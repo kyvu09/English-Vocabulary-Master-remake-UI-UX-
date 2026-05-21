@@ -75,40 +75,40 @@ export async function mount() {
 function showQuizConfig() {
   document.getElementById('practiceContent').innerHTML = `
     <div class="card">
-      <h2 style="margin:0 0 24px;">⚙️ Cấu hình Quiz</h2>
+      <h2 class="m-0 mb-4">⚙️ Cấu hình Quiz</h2>
       
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px;">
-        <div>
-          <label style="font-weight:600; display:block; margin-bottom:8px;">Loại dịch</label>
-          <select id="directionSelect" class="select" style="width:100%;">
+      <div class="row g-3 mb-4">
+        <div class="col-sm-6">
+          <label class="form-label fw-semibold">Loại dịch</label>
+          <select id="directionSelect" class="form-select">
             <option value="both">Ngẫu nhiên</option>
             <option value="en-vi">English → Tiếng Việt</option>
             <option value="vi-en">Tiếng Việt → English</option>
           </select>
         </div>
-        <div>
-          <label style="font-weight:600; display:block; margin-bottom:8px;">Nguồn từ</label>
-          <select id="sourceSelect" class="select" style="width:100%;">
+        <div class="col-sm-6">
+          <label class="form-label fw-semibold">Nguồn từ</label>
+          <select id="sourceSelect" class="form-select">
             <option value="all" ${defaultSourceId === 'all' ? 'selected' : ''}>Tất cả từ vựng (${allWords.length})</option>
             ${sessions.map(s => `<option value="${s.id}" ${defaultSourceId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
           </select>
         </div>
-        <div>
-          <label style="font-weight:600; display:block; margin-bottom:8px;">Số câu hỏi</label>
-            <input id="wordCountInput" class="input" type="number" value="${Math.min(10, allWords.length)}" min="1" max="${allWords.length}" style="width:100%;" />
+        <div class="col-sm-6">
+          <label class="form-label fw-semibold">Số câu hỏi</label>
+          <input id="wordCountInput" class="form-control" type="number" value="${Math.min(10, allWords.length)}" min="1" max="${allWords.length}" />
         </div>
-        <div>
-          <label style="font-weight:600; display:block; margin-bottom:8px;">Chế độ</label>
-          <select id="modeSelect" class="select" style="width:100%;">
+        <div class="col-sm-6">
+          <label class="form-label fw-semibold">Chế độ</label>
+          <select id="modeSelect" class="form-select">
             <option value="quiz">📝 Quiz Văn bản</option>
             <option value="listening">🎧 Listening</option>
           </select>
         </div>
       </div>
 
-      <div style="display:flex; gap:12px;">
-        <button id="startQuizBtn" class="btn btn-primary" style="flex:1;">🎯 Bắt đầu Quiz</button>
-        <button id="cancelBtn" class="btn btn-ghost">Hủy</button>
+      <div class="d-flex gap-2">
+        <button id="startQuizBtn" class="btn btn-primary flex-fill">🎯 Bắt đầu Quiz</button>
+        <button id="cancelBtn" class="btn btn-outline-secondary">Hủy</button>
       </div>
     </div>
   `;
@@ -201,36 +201,36 @@ function renderQuestion() {
 
   let html = `
     <div class="card">
-      <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-        <span style="font-size:0.9rem; color:var(--muted);">Câu ${quizState.currentIndex + 1}/${quizState.questions.length}</span>
-        <span style="font-size:0.9rem; color:#10b981; font-weight:700;">✅ ${quizState.score} đúng</span>
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-muted small">Câu ${quizState.currentIndex + 1}/${quizState.questions.length}</span>
+        <span class="badge bg-success-subtle text-success-emphasis">✅ ${quizState.score} đúng</span>
       </div>
-      <div style="height:6px; background:var(--border); border-radius:3px; margin-bottom:24px;">
-        <div style="height:100%; background:var(--primary); border-radius:3px; width:${progress}%; transition:width 0.3s;"></div>
+      <div class="progress-gradient mb-4">
+        <div class="progress-bar" style="width:${progress}%;"></div>
       </div>
 
-      <div class="practice-card" style="text-align:center; margin-bottom:24px;">
-        <div style="font-size:0.95rem; color:var(--muted); margin-bottom:12px;">${label}</div>
+      <div class="practice-card text-center mb-4">
+        <div class="text-muted small mb-2">${label}</div>
         ${promptDisplay}
       </div>
   `;
 
   if (isListening) {
     html += `
-      <div style="text-align:center; margin-bottom:24px;">
-        <button id="speakBtn" class="btn btn-primary" style="font-size:1.2rem; padding:16px 32px;">🔊 Nghe lại</button>
+      <div class="text-center mb-4">
+        <button id="speakBtn" class="btn btn-primary btn-lg px-5">🔊 Nghe lại</button>
       </div>
     `;
   }
 
   html += `
-    <div style="margin-bottom:20px;">
-      <textarea id="answerInput" class="input" style="width:100%; min-height:60px; resize:none;" placeholder="${isListening ? 'Gõ từ tiếng Anh bạn vừa nghe...' : (isEnVi ? 'Nhập từ/cụm tiếng Việt...' : 'Nhập từ tiếng Anh...')}"></textarea>
-      <div id="inputWarning" style="display:none; color:#ef4444; font-size:0.85rem; margin-top:6px;">⚠️ Hãy nhập câu trả lời trước khi kiểm tra.</div>
+    <div class="mb-3">
+      <textarea id="answerInput" class="form-control" style="min-height:60px; resize:none;" placeholder="${isListening ? 'Gõ từ tiếng Anh bạn vừa nghe...' : (isEnVi ? 'Nhập từ/cụm tiếng Việt...' : 'Nhập từ tiếng Anh...')}"></textarea>
+      <div id="inputWarning" class="small text-danger mt-1" style="display:none;">⚠️ Hãy nhập câu trả lời trước khi kiểm tra.</div>
     </div>
-    <div style="display:flex; gap:12px;">
-      <button id="submitBtn" class="btn btn-primary" style="flex:1;">✓ Kiểm tra</button>
-      <button id="skipBtn" class="btn btn-secondary" style="flex:1;">⏭️ Bỏ qua</button>
+    <div class="d-flex gap-2">
+      <button id="submitBtn" class="btn btn-primary flex-fill">✓ Kiểm tra</button>
+      <button id="skipBtn" class="btn btn-outline-secondary flex-fill">⏭️ Bỏ qua</button>
     </div>
     <div id="feedback"></div>
   `;
@@ -260,7 +260,7 @@ function checkAnswer() {
     const input = document.getElementById('answerInput');
     if (warning) warning.style.display = 'block';
     if (input) {
-      input.style.borderColor = '#ef4444';
+      input.style.borderColor = 'var(--danger)';
       input.focus();
       input.addEventListener('input', () => {
         warning.style.display = 'none';
@@ -321,13 +321,14 @@ function showFeedback(type, title, msg) {
   submitBtn.disabled = true;
   skipBtn.disabled = true;
 
-  const colors = { success: '#d1fae5', error: '#fee2e2', warning: '#fef3c7' };
-  const textColors = { success: '#065f46', error: '#7f1d1d', warning: '#92400e' };
+  const borderColor = type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--warning)';
+  const bgColor = type === 'success' ? 'var(--success-bg)' : type === 'error' ? 'var(--danger-bg)' : 'var(--warning-bg)';
+  const textColor = type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--warning)';
 
   document.getElementById('feedback').innerHTML = `
-    <div style="margin-top:20px; padding:16px; background:${colors[type]}; border-radius:12px; border-left:4px solid ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#f59e0b'};">
-      <div style="font-weight:700; color:${textColors[type]}; margin-bottom:6px;">${title}</div>
-      <div style="color:${textColors[type]}; font-size:0.95rem;">${msg}</div>
+    <div style="margin-top:20px; padding:16px; background:${bgColor}; border-radius:12px; border-left:4px solid ${borderColor};">
+      <div style="font-weight:700; color:${textColor}; margin-bottom:6px;">${title}</div>
+      <div style="color:${textColor}; font-size:0.95rem;">${msg}</div>
       <button id="nextBtn" class="btn btn-primary" style="width:100%; margin-top:12px;">
         ${quizState.currentIndex === quizState.questions.length - 1 ? '🏁 Xem kết quả' : 'Câu tiếp theo →'}
       </button>
@@ -405,29 +406,31 @@ async function showResults() {
   }
 
   document.getElementById('practiceContent').innerHTML = `
-    <div class="card" style="text-align:center;">
-      <div style="font-size:4rem; margin-bottom:12px;">${emoji}</div>
-      <h2 style="margin:0 0 8px;">${percent >= 80 ? 'Xuất sắc!' : percent >= 60 ? 'Tốt lắm!' : percent >= 40 ? 'Cố gắng thêm!' : 'Cần ôn luyện!'}</h2>
-      <div style="font-size:3rem; font-weight:800; color:var(--primary); margin:16px 0;">${correct}/${total}</div>
-      <div style="font-size:1.1rem; color:var(--muted); margin-bottom:32px;">${percent}% chính xác</div>
+    <div class="card text-center border-0">
+      <div class="float-animate" style="font-size:4rem; margin-bottom:12px;">${emoji}</div>
+      <h2 class="m-0">${percent >= 80 ? 'Xuất sắc!' : percent >= 60 ? 'Tốt lắm!' : percent >= 40 ? 'Cố gắng thêm!' : 'Cần ôn luyện!'}</h2>
+      <div class="stat-count" style="font-size:3rem; margin:16px 0;">${correct}/${total}</div>
+      <div class="text-muted mb-4 fs-5">${percent}% chính xác</div>
 
-      <div class="card" style="text-align:left; margin-bottom:24px;">
-        <h3 style="margin:0 0 12px;">Chi tiết kết quả</h3>
-        <div style="max-height:280px; overflow-y:auto;">
+      <div class="card text-start mb-4">
+        <h3 class="m-0 mb-3">Chi tiết kết quả</h3>
+        <div class="stagger-fade" style="max-height:280px; overflow-y:auto;">
           ${quizState.answers.map(a => `
-            <div style="padding:10px; margin-bottom:8px; border-radius:8px; background:${a.correct ? '#d1fae5' : '#fee2e2'}; border-left:4px solid ${a.correct ? '#10b981' : '#ef4444'};">
-              <div style="font-weight:700; margin-bottom:4px;">${a.correct ? '✅' : '❌'} ${a.english}</div>
-              <div style="font-size:0.9rem; color:${a.correct ? '#065f46' : '#7f1d1d'};">
-                ${a.correct ? `✓ Đúng` : `❌ Sai - Đáp án: ${a.correctAnswers}`}
+            <div class="d-flex align-items-start gap-2 p-2 mb-2 rounded-3 ${a.correct ? 'bg-success-subtle' : 'bg-danger-subtle'}" style="border-left:4px solid ${a.correct ? 'var(--success)' : 'var(--danger)'};">
+              <div>
+                <div class="fw-bold small">${a.correct ? '✅' : '❌'} ${a.english}</div>
+                <div class="small ${a.correct ? 'text-success-emphasis' : 'text-danger-emphasis'}">
+                  ${a.correct ? `✓ Đúng` : `❌ Sai - Đáp án: ${a.correctAnswers}`}
+                </div>
               </div>
             </div>
           `).join('')}
         </div>
       </div>
 
-      <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-        <button class="btn btn-ghost" onclick="location.reload()">← Làm lại</button>
-        <button class="btn btn-secondary" onclick="window.router?.navigateTo('results')">📊 Xem lịch sử</button>
+      <div class="d-flex gap-2 justify-content-center flex-wrap">
+        <button class="btn btn-outline-secondary" onclick="location.reload()">← Làm lại</button>
+        <button class="btn btn-outline-primary" onclick="window.router?.navigateTo('results')">📊 Xem lịch sử</button>
         <button class="btn btn-primary" onclick="window.router?.navigateTo('dashboard')">🏠 Trang chủ</button>
       </div>
     </div>

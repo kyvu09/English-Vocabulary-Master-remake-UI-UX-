@@ -21,12 +21,14 @@ export async function render() {
         <p class="page-subtitle">Xem tiến độ và lịch sử quiz</p>
       </div>
 
-      <div class="stagger-container">
+      <div class="stagger-fade">
         <!-- Ranking -->
-        <div class="card">
-          <div class="section-title">
-            <h2>🏆 Từ đã thuộc</h2>
-            <div class="sub">Các từ với độ chính xác ≥ 80%</div>
+        <div class="card hover-lift">
+          <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+            <div>
+              <h2 class="m-0">🏆 Từ đã thuộc</h2>
+              <div class="text-muted small mt-1">Các từ với độ chính xác ≥ 80%</div>
+            </div>
           </div>
           <div id="rankingContainer" class="table-wrap">
             <div class="table-empty">
@@ -37,10 +39,12 @@ export async function render() {
         </div>
 
         <!-- History -->
-        <div class="card">
-          <div class="section-title">
-            <h2>📝 Lịch sử Quiz</h2>
-            <div class="sub">Các bài kiểm tra gần đây</div>
+        <div class="card hover-lift">
+          <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+            <div>
+              <h2 class="m-0">📝 Lịch sử Quiz</h2>
+              <div class="text-muted small mt-1">Các bài kiểm tra gần đây</div>
+            </div>
           </div>
           <div id="historyContainer" class="table-wrap">
             <div class="table-empty">
@@ -99,15 +103,15 @@ function loadRanking() {
     }
 
     container.innerHTML = `
-      <table>
-        <thead>
+      <table class="table table-hover align-middle mb-0" style="min-width:500px;">
+        <thead class="table-light">
           <tr>
-            <th>#</th>
-            <th>Từ tiếng Anh</th>
-            <th>Loại từ</th>
-            <th>Nghĩa</th>
-            <th>Độ chính xác</th>
-            <th>Số lần</th>
+            <th class="small text-muted text-uppercase">#</th>
+            <th class="small text-muted text-uppercase">Từ tiếng Anh</th>
+            <th class="small text-muted text-uppercase">Loại từ</th>
+            <th class="small text-muted text-uppercase">Nghĩa</th>
+            <th class="small text-muted text-uppercase">Độ chính xác</th>
+            <th class="small text-muted text-uppercase">Số lần</th>
           </tr>
         </thead>
         <tbody>
@@ -117,10 +121,10 @@ function loadRanking() {
             return `
               <tr>
                 <td>${i + 1}</td>
-                <td><strong>${getEnglish(w)}</strong></td>
-                <td><span class="badge">${PART_OF_SPEECH[w.partOfSpeech] || w.partOfSpeech || '-'}</span></td>
+                <td class="fw-semibold">${getEnglish(w)}</td>
+                <td><span class="badge bg-primary-subtle text-primary-emphasis">${PART_OF_SPEECH[w.partOfSpeech] || w.partOfSpeech || '-'}</span></td>
                 <td>${w.meaning}</td>
-                <td><span style="color:#10b981; font-weight:700;">${acc}%</span></td>
+                <td><span class="badge bg-success-subtle text-success-emphasis">${acc}%</span></td>
                 <td>${cnt}</td>
               </tr>
             `;
@@ -156,15 +160,15 @@ function loadHistory() {
     }
 
     container.innerHTML = `
-      <table>
-        <thead>
+      <table class="table table-hover align-middle mb-0" style="min-width:600px;">
+        <thead class="table-light">
           <tr>
-            <th>Ngày làm</th>
-            <th>Loại</th>
-            <th>Chiều dịch</th>
-            <th>Số câu</th>
-            <th>Đúng</th>
-            <th>Điểm</th>
+            <th class="small text-muted text-uppercase">Ngày làm</th>
+            <th class="small text-muted text-uppercase">Loại</th>
+            <th class="small text-muted text-uppercase">Chiều dịch</th>
+            <th class="small text-muted text-uppercase">Số câu</th>
+            <th class="small text-muted text-uppercase">Đúng</th>
+            <th class="small text-muted text-uppercase">Điểm</th>
           </tr>
         </thead>
         <tbody>
@@ -174,18 +178,18 @@ function loadHistory() {
             const totalQuestions = d.totalQuestions || d.total || 0;
             const correctAnswers = d.correctAnswers || d.correct || 0;
             const scorePercent = d.scorePercent ?? d.percent ?? Math.round((correctAnswers / Math.max(totalQuestions, 1)) * 100);
+            const scoreBadge = scorePercent >= 80 ? 'success' : scorePercent >= 60 ? 'warning' : 'danger';
             const direction = d.direction || d.directionMode;
             const directionLabel = direction === 'en-vi' ? '🇺🇸→🇻🇳' : direction === 'vi-en' ? '🇻🇳→🇺🇸' : '↔️ Cả hai';
-            const scoreColor = scorePercent >= 80 ? '#10b981' : scorePercent >= 60 ? '#f59e0b' : '#ef4444';
 
             return `
               <tr>
-                <td style="font-size:0.9rem;">${date.toLocaleString('vi-VN')}</td>
-                <td><span class="badge">${d.mode === 'listening' ? '🎧' : '📝'} ${d.mode === 'listening' ? 'Listening' : 'Quiz'}</span></td>
+                <td class="small">${date.toLocaleString('vi-VN')}</td>
+                <td><span class="badge bg-primary-subtle text-primary-emphasis">${d.mode === 'listening' ? '🎧' : '📝'} ${d.mode === 'listening' ? 'Listening' : 'Quiz'}</span></td>
                 <td>${directionLabel}</td>
                 <td>${totalQuestions}</td>
-                <td><strong>${correctAnswers}/${totalQuestions}</strong></td>
-                <td><span style="color:${scoreColor}; font-weight:700;">${scorePercent}%</span></td>
+                <td class="fw-semibold">${correctAnswers}/${totalQuestions}</td>
+                <td><span class="badge bg-${scoreBadge}-subtle text-${scoreBadge}-emphasis">${scorePercent}%</span></td>
               </tr>
             `;
           }).join('')}

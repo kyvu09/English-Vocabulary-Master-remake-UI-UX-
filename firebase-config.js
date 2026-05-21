@@ -5,14 +5,16 @@ import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.
 export const LOGIN_PAGE = "login.html";
 export const APP_PAGE = "index.html";
 
+const cfg = window.__APP_CONFIG__ || {};
+
 export const firebaseConfig = {
-  apiKey: "AIzaSyDwlt1BYfBtWLIuoRLF8uTxmMg1XADlswk",
-  authDomain: "vocab-app-ky.firebaseapp.com",
-  projectId: "vocab-app-ky",
-  storageBucket: "vocab-app-ky.firebasestorage.app",
-  messagingSenderId: "849236148159",
-  appId: "1:849236148159:web:b72e818e528149692cab0a",
-  measurementId: "G-8F3M4GHW5X"
+  apiKey: cfg.FIREBASE_API_KEY || "",
+  authDomain: cfg.FIREBASE_AUTH_DOMAIN || "",
+  projectId: cfg.FIREBASE_PROJECT_ID || "",
+  storageBucket: cfg.FIREBASE_STORAGE_BUCKET || "",
+  messagingSenderId: cfg.FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: cfg.FIREBASE_APP_ID || "",
+  measurementId: cfg.FIREBASE_MEASUREMENT_ID || ""
 };
 
 export function isFirebaseConfigured(config = firebaseConfig) {

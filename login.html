@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Đăng nhập - English Vocabulary Master</title>
   <link rel="icon" href="img/logo.jpg">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="./styles/variables.css" />
   <link rel="stylesheet" href="./styles/layout.css" />
   <link rel="stylesheet" href="./styles/components.css" />
+  <link rel="stylesheet" href="./styles/bootstrap-theme.css" />
   <link rel="stylesheet" href="./style.css" />
   <style>
     /* Modern Split-Screen Login Layout */
@@ -153,6 +155,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    /* Use Bootstrap form-control styling with our theme */
     .login-form-container h2 {
       font-size: 1.8rem;
       margin: 0 0 var(--space-xs);
@@ -161,34 +164,6 @@
     .login-form-container .sub {
       color: var(--muted);
       margin-bottom: var(--space-2xl);
-    }
-
-    .field {
-      margin-bottom: var(--space-lg);
-    }
-
-    .field label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: var(--space-xs);
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-
-    .btn-google {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      margin-top: var(--space-md);
-      background: white;
-      border: 1px solid var(--line);
-      color: var(--text);
-    }
-
-    .btn-google:hover {
-      background: var(--surface-soft);
-      border-color: #d1d5db;
     }
 
     .divider {
@@ -284,25 +259,25 @@
 
         <!-- PANEL ĐĂNG NHẬP -->
         <div id="loginPanel" class="auth-panel active">
-          <form id="loginForm" class="stack-form">
-            <div class="field">
-              <label for="loginEmail">Email của bạn</label>
-              <input id="loginEmail" class="input" type="email" placeholder="email@example.com" required />
+          <form id="loginForm">
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="loginEmail">Email của bạn</label>
+              <input id="loginEmail" class="form-control" type="email" placeholder="email@example.com" required />
             </div>
-            <div class="field">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xs);">
-                <label for="loginPassword" style="margin-bottom: 0;">Mật khẩu</label>
-                <a href="#" id="btnShowForgotPassword" style="font-size: 13px; color: var(--primary); text-decoration: none; font-weight: 500;">Quên mật khẩu?</a>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label fw-semibold mb-0" for="loginPassword">Mật khẩu</label>
+                <a href="#" id="btnShowForgotPassword" class="text-decoration-none small fw-medium" style="color: var(--primary);">Quên mật khẩu?</a>
               </div>
-              <input id="loginPassword" class="input" type="password" placeholder="••••••••" required />
+              <input id="loginPassword" class="form-control" type="password" placeholder="••••••••" required />
             </div>
             
-            <button class="btn btn-primary" type="submit" style="width: 100%;">Đăng nhập</button>
+            <button class="btn btn-primary w-100" type="submit">Đăng nhập</button>
             
             <div class="divider">HOẶC</div>
 
-            <button class="btn btn-google" type="button" id="googleLoginBtn">
-              <svg style="width:18px; height:18px; margin-right:8px;" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            <button class="btn btn-google w-100 d-flex align-items-center justify-content-center gap-2" type="button" id="googleLoginBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
               Đăng nhập bằng Google
             </button>
           </form>
@@ -310,26 +285,26 @@
 
         <!-- PANEL ĐĂNG KÝ -->
         <div id="registerPanel" class="auth-panel">
-          <form id="registerForm" class="stack-form">
-            <div class="field">
-              <label for="registerName">Tên hiển thị</label>
-              <input id="registerName" class="input" type="text" placeholder="Ví dụ: Nguyễn Văn A" />
+          <form id="registerForm">
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="registerName">Tên hiển thị</label>
+              <input id="registerName" class="form-control" type="text" placeholder="Ví dụ: Nguyễn Văn A" />
             </div>
-            <div class="field">
-              <label for="registerEmail">Email của bạn</label>
-              <input id="registerEmail" class="input" type="email" placeholder="email@example.com" required />
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="registerEmail">Email của bạn</label>
+              <input id="registerEmail" class="form-control" type="email" placeholder="email@example.com" required />
             </div>
-            <div class="field">
-              <label for="registerPassword">Mật khẩu (Tối thiểu 6 ký tự)</label>
-              <input id="registerPassword" class="input" type="password" placeholder="••••••••" required />
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="registerPassword">Mật khẩu (Tối thiểu 6 ký tự)</label>
+              <input id="registerPassword" class="form-control" type="password" placeholder="••••••••" required />
             </div>
             
-            <button class="btn btn-primary" type="submit" style="width: 100%;">Tạo tài khoản</button>
+            <button class="btn btn-primary w-100" type="submit">Tạo tài khoản</button>
             
             <div class="divider">HOẶC</div>
 
-            <button class="btn btn-google" type="button" id="googleRegisterBtn">
-              <svg style="width:18px; height:18px; margin-right:8px;" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            <button class="btn btn-google w-100 d-flex align-items-center justify-content-center gap-2" type="button" id="googleRegisterBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
               Đăng ký bằng Google
             </button>
           </form>
@@ -337,15 +312,15 @@
 
         <!-- PANEL QUÊN MẬT KHẨU -->
         <div id="forgotPasswordPanel" class="auth-panel">
-          <form id="forgotPasswordForm" class="stack-form">
-            <p style="font-size: 0.95rem; margin-bottom: var(--space-lg); color: var(--muted); line-height: 1.5;">Nhập email của bạn, chúng tôi sẽ gửi một liên kết để đặt lại mật khẩu.</p>
-            <div class="field">
-              <label for="forgotEmail">Email khôi phục</label>
-              <input id="forgotEmail" class="input" type="email" placeholder="email@example.com" required />
+          <form id="forgotPasswordForm">
+            <p class="text-muted small mb-3" style="line-height: 1.5;">Nhập email của bạn, chúng tôi sẽ gửi một liên kết để đặt lại mật khẩu.</p>
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="forgotEmail">Email khôi phục</label>
+              <input id="forgotEmail" class="form-control" type="email" placeholder="email@example.com" required />
             </div>
-            <div style="display: flex; flex-direction: column; gap: var(--space-md); margin-top: var(--space-xl);">
-              <button class="btn btn-primary" type="submit" style="width: 100%">Gửi liên kết đặt lại</button>
-              <button class="btn btn-ghost" type="button" id="btnBackToLogin" style="width: 100%;">Quay lại đăng nhập</button>
+            <div class="d-flex flex-column gap-2 mt-4">
+              <button class="btn btn-primary w-100" type="submit">Gửi liên kết đặt lại</button>
+              <button class="btn btn-outline-secondary w-100" type="button" id="btnBackToLogin">Quay lại đăng nhập</button>
             </div>
           </form>
         </div>
@@ -354,6 +329,17 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="env-config.js"></script>
+  <script>
+    // Initialize theme from localStorage
+    (function() {
+      var saved = localStorage.getItem("app-theme");
+      if (saved === "dark") {
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
+    })();
+  </script>
   <script type="module" src="auth.js"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@ import {
   collection, query, orderBy, onSnapshot, deleteDoc, doc, 
   addDoc, updateDoc, serverTimestamp, where, limit, getDocs
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { showAlert, showConfirm } from '../core/ui-utils.js';
+import { showAlert, showConfirm, showToast } from '../core/ui-utils.js';
 
 const PART_OF_SPEECH = {
   noun: 'Danh từ',
@@ -24,6 +24,7 @@ let unsubscribers = [];
 let vocabularyData = [];
 let sessionsData = [];
 let editingWordId = null;
+let wordModalInstance = null;
 
 function getEnglish(word = null) {
   return word?.english || word?.englishWord || '';
@@ -73,50 +74,52 @@ export async function render() {
         </div>
       </div>
 
-      <!-- Modal Thêm/Sửa từ -->
-      <div id="wordModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:1000; align-items:center; justify-content:center; overflow-y:auto;">
-        <div style="background:white; border-radius:16px; padding:32px; width:100%; max-width:520px; margin:16px auto;">
-          <h2 id="wordModalTitle" style="margin:0 0 24px;">Thêm từ vựng mới</h2>
-          
-          <div style="display:flex; gap:12px; margin-bottom:16px;">
-            <div style="flex:1;">
-              <label style="font-weight:600; display:block; margin-bottom:6px;">Từ tiếng Anh *</label>
-              <input id="modalEnglishWord" class="input" type="text" placeholder="apple" style="width:100%;" />
+      <!-- Modal Thêm/Sửa từ (Bootstrap) -->
+      <div id="wordModal" class="modal fade" tabindex="-1" style="z-index:1055;">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content p-4 border-0 shadow" style="border-radius:var(--radius);">
+            <h2 class="fs-4 fw-bold mb-4" id="wordModalTitle">Thêm từ vựng mới</h2>
+            
+            <div class="d-flex gap-2 mb-3">
+              <div class="flex-grow-1">
+                <label class="form-label fw-semibold">Từ tiếng Anh *</label>
+                <input id="modalEnglishWord" class="form-control" type="text" placeholder="apple" />
+              </div>
+              <button id="lookupBtn" class="btn btn-outline-primary align-self-end">🔍 Tìm</button>
             </div>
-            <button id="lookupBtn" class="btn btn-secondary" style="align-self:flex-end;">🔍 Tìm</button>
-          </div>
 
-          <div id="lookupStatus" style="display:none; padding:12px; background:#e0f2fe; border-radius:8px; border-left:4px solid #0284c7; color:#0c4a6e; margin-bottom:16px; font-size:0.9rem;"></div>
+            <div id="lookupStatus" class="alert alert-info py-2 px-3 small d-none"></div>
 
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
-            <div>
-              <label style="font-weight:600; display:block; margin-bottom:6px;">Phiên âm</label>
-              <input id="modalPhonetic" class="input" type="text" placeholder="/ˈæp.əl/" style="width:100%;" />
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-semibold small">Phiên âm</label>
+                <input id="modalPhonetic" class="form-control" type="text" placeholder="/ˈæp.əl/" />
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold small">Loại từ</label>
+                <select id="modalPartOfSpeech" class="form-select">
+                  <option value="">-- Chọn --</option>
+                  ${Object.entries(PART_OF_SPEECH).map(([k,v]) => `<option value="${k}">${v}</option>`).join('')}
+                </select>
+              </div>
             </div>
-            <div>
-              <label style="font-weight:600; display:block; margin-bottom:6px;">Loại từ</label>
-              <select id="modalPartOfSpeech" class="select" style="width:100%;">
-                <option value="">-- Chọn --</option>
-                ${Object.entries(PART_OF_SPEECH).map(([k,v]) => `<option value="${k}">${v}</option>`).join('')}
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Nghĩa tiếng Việt *</label>
+              <input id="modalMeaning" class="form-control" type="text" placeholder="quả táo; hình tròn..." />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Buổi học</label>
+              <select id="modalSession" class="form-select">
+                <option value="">-- Chọn buổi học --</option>
               </select>
             </div>
-          </div>
 
-          <div style="margin-bottom:16px;">
-            <label style="font-weight:600; display:block; margin-bottom:6px;">Nghĩa tiếng Việt *</label>
-            <input id="modalMeaning" class="input" type="text" placeholder="quả táo; hình tròn..." style="width:100%;" />
-          </div>
-
-          <div style="margin-bottom:16px;">
-            <label style="font-weight:600; display:block; margin-bottom:6px;">Buổi học</label>
-            <select id="modalSession" class="select" style="width:100%;">
-              <option value="">-- Chọn buổi học --</option>
-            </select>
-          </div>
-
-          <div style="display:flex; gap:12px; justify-content:flex-end;">
-            <button class="btn btn-ghost" id="wordModalCancelBtn">Hủy</button>
-            <button class="btn btn-primary" id="wordModalSaveBtn">💾 Lưu</button>
+            <div class="d-flex gap-2 justify-content-end mt-4">
+              <button class="btn btn-outline-secondary" id="wordModalCancelBtn">Hủy</button>
+              <button class="btn btn-primary" id="wordModalSaveBtn">💾 Lưu</button>
+            </div>
           </div>
         </div>
       </div>
@@ -136,10 +139,6 @@ export async function mount() {
   document.getElementById('lookupBtn').addEventListener('click', lookupWord);
   document.getElementById('wordSearchInput').addEventListener('input', filterTable);
   document.getElementById('wordFilterSession').addEventListener('change', filterTable);
-
-  document.getElementById('wordModal').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('wordModal')) closeWordModal();
-  });
 
   if (window.vocabSearchQuery) {
     document.getElementById('wordSearchInput').value = window.vocabSearchQuery;
@@ -162,12 +161,13 @@ async function lookupWord() {
   const statusEl = document.getElementById('lookupStatus');
   statusEl.style.display = 'block';
   statusEl.textContent = '⏳ Đang tìm...';
-  statusEl.style.background = '#e0f2fe';
-  statusEl.style.color = '#0c4a6e';
+  statusEl.style.background = 'var(--info-bg)';
+  statusEl.style.color = 'var(--info)';
 
- try {
-  const dictionaryUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(english)}`;
-  const dictionaryResponse = await fetch(dictionaryUrl);
+  try {
+   const dictBase = (window.__APP_CONFIG__?.API_DICTIONARY) || "https://api.dictionaryapi.dev/api/v2/entries/en";
+   const dictionaryUrl = `${dictBase}/${encodeURIComponent(english)}`;
+   const dictionaryResponse = await fetch(dictionaryUrl);
   let sourceText = english;
 
   if (dictionaryResponse.ok) {
@@ -187,7 +187,8 @@ async function lookupWord() {
     if (firstDefinition) sourceText = firstDefinition;
   }
 
-  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(sourceText)}&langpair=en|vi`;
+  const translateBase = (window.__APP_CONFIG__?.API_TRANSLATE) || "https://api.mymemory.translated.net/get";
+  const url = `${translateBase}?q=${encodeURIComponent(sourceText)}&langpair=en|vi`;
   const response = await fetch(url);
 
   if (!response.ok) {
@@ -199,8 +200,8 @@ async function lookupWord() {
 
   document.getElementById('modalMeaning').value = result;
 
-  statusEl.style.background = '#dcfce7';
-  statusEl.style.color = '#065f46';
+  statusEl.style.background = 'var(--success-bg)';
+  statusEl.style.color = 'var(--success)';
   statusEl.textContent = '✅ Dịch thành công!';
 
   setTimeout(() => {
@@ -208,8 +209,8 @@ async function lookupWord() {
   }, 1500);
 
 } catch (err) {
-  statusEl.style.background = '#fee2e2';
-  statusEl.style.color = '#7f1d1d';
+  statusEl.style.background = 'var(--danger-bg)';
+  statusEl.style.color = 'var(--danger)';
   statusEl.textContent = `❌ Lỗi: ${err.message}`;
 }
 }
@@ -221,18 +222,21 @@ function openWordModal(word = null) {
   document.getElementById('modalPhonetic').value = word?.phonetic || '';
   document.getElementById('modalMeaning').value = word?.meaning || '';
   document.getElementById('modalPartOfSpeech').value = word?.partOfSpeech || '';
-  document.getElementById('lookupStatus').style.display = 'none';
+  document.getElementById('lookupStatus').classList.add('d-none');
 
   const sessionSelect = document.getElementById('modalSession');
   sessionSelect.innerHTML = '<option value="">-- Chọn buổi học --</option>' +
     sessionsData.map(s => `<option value="${s.id}" ${word?.sessionId === s.id ? 'selected' : ''}>${s.name}</option>`).join('');
 
-  document.getElementById('wordModal').style.display = 'flex';
-  setTimeout(() => document.getElementById('modalEnglishWord').focus(), 100);
+  if (!wordModalInstance) {
+    wordModalInstance = new bootstrap.Modal(document.getElementById('wordModal'), { backdrop: true });
+  }
+  wordModalInstance.show();
+  setTimeout(() => document.getElementById('modalEnglishWord').focus(), 300);
 }
 
 function closeWordModal() {
-  document.getElementById('wordModal').style.display = 'none';
+  if (wordModalInstance) wordModalInstance.hide();
   editingWordId = null;
 }
 
@@ -329,44 +333,7 @@ async function saveWord() {
 }
 
 function showSaveSuccessToast(word) {
-  // Xóa toast cũ nếu có
-  const existing = document.getElementById('saveSuccessToast');
-  if (existing) existing.remove();
-
-  const toast = document.createElement('div');
-  toast.id = 'saveSuccessToast';
-  toast.style.cssText = `
-    position: fixed;
-    bottom: 32px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
-    z-index: 2000;
-    opacity: 0;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    pointer-events: none;
-  `;
-  toast.textContent = `✅ Đã lưu "${word}" thành công!`;
-  document.body.appendChild(toast);
-
-  // Animate in
-  requestAnimationFrame(() => {
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateX(-50%) translateY(0)';
-  });
-
-  // Animate out sau 2 giây
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(-50%) translateY(20px)';
-    setTimeout(() => toast.remove(), 300);
-  }, 2000);
+  showToast(`Đã lưu "${word}" thành công!`, 'success');
 }
 
 async function deleteWord(wordId) {
@@ -451,31 +418,31 @@ function renderTable(data) {
   }
 
   container.innerHTML = `
-    <table>
-      <thead>
+    <table class="table table-hover align-middle mb-0" style="min-width:600px;">
+      <thead class="table-light">
         <tr>
-          <th>Từ tiếng Anh</th>
-          <th>Phiên âm</th>
-          <th>Loại từ</th>
-          <th>Nghĩa tiếng Việt</th>
-          <th>Độ chính xác</th>
-          <th>Thao tác</th>
+          <th class="small text-muted text-uppercase">Từ tiếng Anh</th>
+          <th class="small text-muted text-uppercase">Phiên âm</th>
+          <th class="small text-muted text-uppercase">Loại từ</th>
+          <th class="small text-muted text-uppercase">Nghĩa tiếng Việt</th>
+          <th class="small text-muted text-uppercase">Độ chính xác</th>
+          <th class="small text-muted text-uppercase">Thao tác</th>
         </tr>
       </thead>
       <tbody>
         ${data.map(word => {
           const acc = word.stats?.accuracy || 0;
-          const accColor = acc >= 80 ? '#10b981' : acc >= 60 ? '#f59e0b' : '#ef4444';
+          const accBadge = acc >= 80 ? 'success' : acc >= 60 ? 'warning' : 'danger';
           return `
             <tr>
-              <td><strong>${getEnglish(word)}</strong></td>
-              <td style="font-size:0.9rem; color:var(--muted);">${word.phonetic || '-'}</td>
-              <td><span class="badge">${PART_OF_SPEECH[word.partOfSpeech] || word.partOfSpeech || '-'}</span></td>
+              <td class="fw-semibold">${getEnglish(word)}</td>
+              <td class="text-muted small">${word.phonetic || '-'}</td>
+              <td><span class="badge bg-primary-subtle text-primary-emphasis">${PART_OF_SPEECH[word.partOfSpeech] || word.partOfSpeech || '-'}</span></td>
               <td>${word.meaning}</td>
-              <td><span style="color:${accColor}; font-weight:700;">${acc}%</span></td>
+              <td><span class="badge bg-${accBadge}-subtle text-${accBadge}-emphasis">${acc}%</span></td>
               <td>
-                <button class="btn btn-sm btn-ghost word-edit-btn" data-id="${word.id}">✏️</button>
-                <button class="btn btn-sm btn-danger word-delete-btn" data-id="${word.id}">🗑️</button>
+                <button class="btn btn-sm btn-outline-secondary border-0 word-edit-btn" data-id="${word.id}">✏️</button>
+                <button class="btn btn-sm btn-outline-danger border-0 word-delete-btn" data-id="${word.id}">🗑️</button>
               </td>
             </tr>
           `;

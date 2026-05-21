@@ -97,7 +97,8 @@ export async function lookupWordMeaning(word) {
   if (dictionaryCache.has(key)) return dictionaryCache.get(key);
 
   try {
-    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+    const dictUrl = (window.__APP_CONFIG__?.API_DICTIONARY) || "https://api.dictionaryapi.dev/api/v2/entries/en";
+    const response = await fetch(`${dictUrl}/${encodeURIComponent(word)}`);
     if (!response.ok) throw new Error("Dictionary lookup failed");
 
     const entries = await response.json();
@@ -159,7 +160,8 @@ async function translateToVietnamese(text) {
   const key = normalizeText(text);
   if (translationCache.has(key)) return translationCache.get(key);
 
-  const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|vi`);
+  const translateBase = (window.__APP_CONFIG__?.API_TRANSLATE) || "https://api.mymemory.translated.net/get";
+  const response = await fetch(`${translateBase}?q=${encodeURIComponent(text)}&langpair=en|vi`);
   if (!response.ok) throw new Error("Translation failed");
 
   const data = await response.json();

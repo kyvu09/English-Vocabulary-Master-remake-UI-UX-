@@ -98,7 +98,7 @@ textarea {
 }
 
 .sidebar-logo img {
-  width: 40%;
+  width: 30%;
   height: 50%;
   border-radius: var(--radius-sm);
 }
@@ -402,8 +402,10 @@ textarea {
   margin-top: var(--navbar-height);
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   min-height: calc(100vh - var(--navbar-height));
   transition: margin-left var(--transition);
+  -webkit-overflow-scrolling: touch;
 }
 
 .page-container {
@@ -447,7 +449,8 @@ textarea {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 64px;
+  height: calc(64px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   background: var(--surface-strong);
   border-top: 1px solid var(--line-soft);
   box-shadow: var(--shadow-2);
@@ -582,7 +585,7 @@ textarea {
 
   .app-content {
     margin-left: 0;
-    padding-bottom: 80px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
 
   .tab-bar {
@@ -605,11 +608,15 @@ textarea {
 
   .page-container {
     width: 100%;
-    padding: var(--space-2xl) var(--space-lg);
+    padding: var(--space-lg) var(--space-lg) var(--space-2xl);
+  }
+
+  .page-header {
+    margin-bottom: var(--space-2xl);
   }
 
   .page-title {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
 
   .page-actions {
@@ -651,4 +658,19 @@ textarea {
 
 .no-scroll {
   overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* Disable hover effects on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .btn:hover,
+  .card:hover,
+  .stat-card:hover,
+  .nav-item:hover {
+    transform: none !important;
+  }
+
+  .stat-card:hover {
+    transform: none !important;
+  }
 }

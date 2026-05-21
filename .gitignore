@@ -1,0 +1,7 @@
+# Sensitive config files (contain real API keys)
+env-config.js
+.env
+
+# OS files
+.DS_Store
+Thumbs.db

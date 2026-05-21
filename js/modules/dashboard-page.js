@@ -18,51 +18,53 @@ export async function render() {
       </div>
 
       <!-- Stats Grid -->
-      <div class="stagger-container">
-        <div class="card">
-          <div class="section-title">
+      <div class="stagger-fade">
+        <div class="card hover-lift">
+          <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
             <div>
-              <h2>Tổng quan học tập</h2>
-              <div class="sub">Theo dõi tiến độ của bạn</div>
+              <h2 class="m-0">Tổng quan học tập</h2>
+              <div class="text-muted small mt-1">Theo dõi tiến độ của bạn</div>
             </div>
           </div>
 
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-label">Tổng từ vựng</div>
-              <div class="stat-value">${stats.totalWords}</div>
-              <div class="stat-change positive">📈 Đã thêm mới</div>
+          <div class="row g-2">
+            <div class="col-6 col-md-3">
+              <div class="stat-card h-100">
+                <div class="stat-label">Tổng từ vựng</div>
+                <div class="stat-count">${stats.totalWords}</div>
+              </div>
             </div>
-
-            <div class="stat-card">
-              <div class="stat-label">Từ đã thuộc</div>
-              <div class="stat-value">${stats.learnedWords}</div>
-              <div class="stat-change positive">✅ ${Math.round((stats.learnedWords / Math.max(stats.totalWords, 1)) * 100)}%</div>
+            <div class="col-6 col-md-3">
+              <div class="stat-card h-100">
+                <div class="stat-label">Từ đã thuộc</div>
+                <div class="stat-count">${stats.learnedWords}</div>
+                <div class="stat-change positive">✅ ${Math.round((stats.learnedWords / Math.max(stats.totalWords, 1)) * 100)}%</div>
+              </div>
             </div>
-
-            <div class="stat-card">
-              <div class="stat-label">Buổi học</div>
-              <div class="stat-value">${stats.sessions}</div>
-              <div class="stat-change">📚 Đang học</div>
+            <div class="col-6 col-md-3">
+              <div class="stat-card h-100">
+                <div class="stat-label">Buổi học</div>
+                <div class="stat-count">${stats.sessions}</div>
+              </div>
             </div>
-
-            <div class="stat-card">
-              <div class="stat-label">Quiz hoàn thành</div>
-              <div class="stat-value">${stats.quizzes}</div>
-              <div class="stat-change">🎯 Bài kiểm tra</div>
+            <div class="col-6 col-md-3">
+              <div class="stat-card h-100">
+                <div class="stat-label">Quiz hoàn thành</div>
+                <div class="stat-count">${stats.quizzes}</div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Recent Activity -->
-        <div class="card">
-          <div class="section-title">
+        <div class="card hover-lift">
+          <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
             <div>
-              <h2>Hoạt động gần đây</h2>
-              <div class="sub">Những từ vựng mới nhất của bạn</div>
+              <h2 class="m-0">Hoạt động gần đây</h2>
+              <div class="text-muted small mt-1">Những từ vựng mới nhất của bạn</div>
             </div>
           </div>
-          <div id="recentActivityContainer" class="stagger-container">
+          <div id="recentActivityContainer" class="stagger-fade">
             <div class="table-empty">
               <div class="table-empty-icon">📝</div>
               <p>Chưa có hoạt động nào. Hãy bắt đầu thêm từ vựng!</p>
@@ -72,26 +74,26 @@ export async function render() {
 
         <!-- Quick Tips -->
         <div class="card">
-          <div class="section-title">
+          <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
             <div>
-              <h2>💡 Mẹo học tập</h2>
-              <div class="sub">Làm theo những gợi ý này để học hiệu quả</div>
+              <h2 class="m-0">💡 Mẹo học tập</h2>
+              <div class="text-muted small mt-1">Làm theo những gợi ý này để học hiệu quả</div>
             </div>
           </div>
-          <div class="feature-list">
-            <div class="feature-item">
+          <div class="d-grid gap-2">
+            <div class="feature-item animate-slide-up">
               <strong>Học từng buổi thường xuyên</strong>
               <span>Chia nhỏ các từ vựng thành từng nhóm (buổi) để tập trung tốt hơn.</span>
             </div>
-            <div class="feature-item">
+            <div class="feature-item animate-slide-up">
               <strong>Ôn luyện đa chế độ</strong>
               <span>Sử dụng Quiz, Spelling, Listening để ôn luyện toàn diện.</span>
             </div>
-            <div class="feature-item">
+            <div class="feature-item animate-slide-up">
               <strong>Kiểm tra tiến độ thường xuyên</strong>
               <span>Xem lịch sử Quiz để đánh giá mức độ thành thạo của bạn.</span>
             </div>
-            <div class="feature-item">
+            <div class="feature-item animate-slide-up">
               <strong>Nghe phát âm đúng</strong>
               <span>Nhấn biểu tượng loa để nghe cách phát âm từng từ vựng.</span>
             </div>

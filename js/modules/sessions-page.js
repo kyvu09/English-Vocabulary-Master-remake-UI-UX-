@@ -6,6 +6,7 @@ import { showAlert, showConfirm } from '../core/ui-utils.js';
 let unsubscribers = [];
 let sessions = [];
 let vocabulary = [];
+let sessionModalInstance = null;
 
 function normalizeText(value = '') {
   return String(value).trim().toLowerCase().replace(/\s+/g, ' ');
@@ -31,31 +32,35 @@ export async function render() {
       </div>
 
       <div class="card">
-        <div class="section-title">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
           <div>
-            <h2>Danh sách buổi học</h2>
-            <div class="sub">Các nhóm từ vựng của bạn</div>
+            <h2 class="m-0">Danh sách buổi học</h2>
+            <div class="text-muted small mt-1">Các nhóm từ vựng của bạn</div>
           </div>
         </div>
-        <div id="sessionsContainer" class="stagger-container" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:20px;">
-          <div class="table-empty" style="grid-column:1/-1;">
-            <div class="table-empty-icon">🎯</div>
-            <p>Chưa có buổi học nào. Hãy tạo buổi học đầu tiên!</p>
+        <div id="sessionsContainer" class="row g-3 stagger-fade">
+          <div class="col-12">
+            <div class="table-empty">
+              <div class="table-empty-icon">🎯</div>
+              <p>Chưa có buổi học nào. Hãy tạo buổi học đầu tiên!</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Modal tạo buổi học -->
-      <div id="sessionModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:1000; align-items:center; justify-content:center;">
-        <div style="background:white; border-radius:16px; padding:32px; width:100%; max-width:420px; margin:16px; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-          <h2 style="margin:0 0 24px;">Tạo buổi học mới</h2>
-          <div>
-            <label style="font-weight:600; display:block; margin-bottom:6px;">Tên buổi học *</label>
-            <input id="sessionNameInput" class="input" type="text" placeholder="Ví dụ: Buổi 1 - Động vật" style="width:100%;" />
-          </div>
-          <div style="display:flex; gap:12px; margin-top:24px; justify-content:flex-end;">
-            <button class="btn btn-ghost" id="sessionModalCancelBtn">Hủy</button>
-            <button class="btn btn-primary" id="sessionModalSaveBtn">💾 Tạo</button>
+      <!-- Modal tạo buổi học (Bootstrap) -->
+      <div id="sessionModal" class="modal fade" tabindex="-1" style="z-index:1055;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+          <div class="modal-content border-0 shadow p-4" style="border-radius:var(--radius);">
+            <h2 class="fs-4 fw-bold mb-4">Tạo buổi học mới</h2>
+            <div class="mb-0">
+              <label class="form-label fw-semibold">Tên buổi học *</label>
+              <input id="sessionNameInput" class="form-control" type="text" placeholder="Ví dụ: Buổi 1 - Động vật" />
+            </div>
+            <div class="d-flex gap-2 justify-content-end mt-4">
+              <button class="btn btn-outline-secondary" id="sessionModalCancelBtn">Hủy</button>
+              <button class="btn btn-primary" id="sessionModalSaveBtn">💾 Tạo</button>
+            </div>
           </div>
         </div>
       </div>
@@ -69,19 +74,18 @@ export async function mount() {
     pageTitleEl.textContent = 'Buổi học';
   }
 
+  if (!sessionModalInstance) {
+    sessionModalInstance = new bootstrap.Modal(document.getElementById('sessionModal'), { backdrop: true });
+  }
+
   document.getElementById('createNewSessionBtn').addEventListener('click', () => {
     document.getElementById('sessionNameInput').value = '';
-    document.getElementById('sessionModal').style.display = 'flex';
-    setTimeout(() => document.getElementById('sessionNameInput').focus(), 100);
+    sessionModalInstance.show();
+    setTimeout(() => document.getElementById('sessionNameInput').focus(), 300);
   });
 
   document.getElementById('sessionModalCancelBtn').addEventListener('click', () => {
-    document.getElementById('sessionModal').style.display = 'none';
-  });
-
-  document.getElementById('sessionModal').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('sessionModal'))
-      document.getElementById('sessionModal').style.display = 'none';
+    sessionModalInstance.hide();
   });
 
   document.getElementById('sessionModalSaveBtn').addEventListener('click', createSession);
@@ -115,7 +119,7 @@ async function createSession() {
       slug: slugify(name),
       createdAt: serverTimestamp(),
     });
-    document.getElementById('sessionModal').style.display = 'none';
+    sessionModalInstance.hide();
   } catch (err) {
     await showAlert('Tạo thất bại: ' + err.message, 'Lỗi');
   } finally {
@@ -176,25 +180,29 @@ function renderSessions() {
 
   if (sessions.length === 0) {
     container.innerHTML = `
-      <div class="table-empty" style="grid-column:1/-1;">
-        <div class="table-empty-icon">🎯</div>
-        <p>Chưa có buổi học nào. Hãy tạo buổi học đầu tiên!</p>
+      <div class="col-12">
+        <div class="table-empty">
+          <div class="table-empty-icon">🎯</div>
+          <p>Chưa có buổi học nào. Hãy tạo buổi học đầu tiên!</p>
+        </div>
       </div>
     `;
     return;
   }
 
   container.innerHTML = sessions.map(session => `
-    <div class="card" style="position:relative;">
-      <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:16px;">
-        <h3 style="margin:0; flex:1; margin-right:8px;">${session.name}</h3>
-        <button class="btn btn-sm btn-danger session-delete-btn" data-id="${session.id}" title="Xóa buổi học">🗑️</button>
-      </div>
-      <div class="stat-label">Số từ vựng</div>
-      <div class="stat-value" style="color:var(--primary); font-size:1.8rem;">${getWordCount(session)}</div>
-      <div style="display:flex; gap:8px; margin-top:16px;">
-        <button class="btn btn-primary btn-sm session-study-btn" data-id="${session.id}" data-name="${session.name}" style="flex:1;">📖 Luyện tập</button>
-        <button class="btn btn-ghost btn-sm session-vocab-btn" data-id="${session.id}" data-name="${session.name}" style="flex:1;">📚 Xem từ</button>
+    <div class="col-sm-6 col-lg-4">
+      <div class="card h-100 hover-lift" style="position:relative;">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+          <h3 class="m-0 fs-5 flex-grow-1">${session.name}</h3>
+          <button class="btn btn-sm btn-outline-danger border-0 session-delete-btn p-1" data-id="${session.id}" title="Xóa buổi học">🗑️</button>
+        </div>
+        <div class="stat-label mb-1">Số từ vựng</div>
+        <div class="stat-count" style="font-size:1.8rem;">${getWordCount(session)}</div>
+        <div class="d-flex gap-2 mt-4">
+          <button class="btn btn-primary btn-sm flex-fill session-study-btn" data-id="${session.id}" data-name="${session.name}">📖 Luyện tập</button>
+          <button class="btn btn-outline-secondary btn-sm flex-fill session-vocab-btn" data-id="${session.id}" data-name="${session.name}">📚 Xem từ</button>
+        </div>
       </div>
     </div>
   `).join('');
