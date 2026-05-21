@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>English Vocabulary Master</title>
+  <link rel="stylesheet" href="styles/variables.css">
+  <link rel="stylesheet" href="styles/animations.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-wrapper">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="#dashboard" class="sidebar-logo">
+          <img src="img/logo.jpg" alt="logo">
+          <span>EV Master</span>
+        </a>
+        <button class="sidebar-close-btn" id="sidebarCloseBtn" type="button" aria-label="Đóng menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="sidebar-nav">
+        <button class="nav-item active" type="button" data-page="dashboard">
+          <span class="nav-icon">🏠</span>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" type="button" data-page="vocabulary">
+          <span class="nav-icon">📚</span>
+          <span>Từ vựng</span>
+        </button>
+        <button class="nav-item" type="button" data-page="sessions">
+          <span class="nav-icon">🎯</span>
+          <span>Buổi học</span>
+        </button>
+        <button class="nav-item" type="button" data-page="practice">
+          <span class="nav-icon">✍️</span>
+          <span>Luyện tập</span>
+        </button>
+        <button class="nav-item" type="button" data-page="results">
+          <span class="nav-icon">📊</span>
+          <span>Kết quả</span>
+        </button>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="user-profile" id="userProfile" type="button" aria-label="Mở tài khoản người dùng">
+          <div class="user-avatar" id="userAvatar">
+            <img id="userAvatarImage" alt="Ảnh đại diện" hidden />
+            <span id="userInitial">U</span>
+          </div>
+          <div class="user-meta">
+            <div class="user-name" id="userName">Đang tải...</div>
+            <div class="user-email" id="userEmail">...</div>
+          </div>
+          <span class="user-profile-arrow">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </button>
+      </div>
+    </nav>
+
+    <header class="navbar">
+      <div class="navbar-left">
+        <button class="hamburger-btn navbar-menu-btn" id="hamburgerBtn" type="button" aria-label="Mở menu">
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
+        <h1 class="navbar-title" id="pageTitle">Dashboard</h1>
+      </div>
+
+      <div class="navbar-right"></div>
+    </header>
+
+    <main class="app-content">
+      <div id="pageContent" class="page"></div>
+    </main>
+
+    <div class="tab-bar">
+      <div class="tab-bar-items">
+        <button class="tab-bar-item active" type="button" data-page="dashboard">
+          <span class="tab-bar-icon">🏠</span>
+          <span>Dashboard</span>
+        </button>
+        <button class="tab-bar-item" type="button" data-page="vocabulary">
+          <span class="tab-bar-icon">📚</span>
+          <span>Từ vựng</span>
+        </button>
+        <button class="tab-bar-item" type="button" data-page="sessions">
+          <span class="tab-bar-icon">🎯</span>
+          <span>Buổi học</span>
+        </button>
+        <button class="tab-bar-item" type="button" data-page="practice">
+          <span class="tab-bar-icon">✍️</span>
+          <span>Luyện tập</span>
+        </button>
+        <button class="tab-bar-item" type="button" data-page="results">
+          <span class="tab-bar-icon">📊</span>
+          <span>Kết quả</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <div id="accountModal" class="modal" aria-hidden="true">
+    <div class="modal-card account-modal-card">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Tài khoản người dùng</h2>
+          <p class="modal-subtitle">Cập nhật hồ sơ, ảnh đại diện và yêu cầu email đổi mật khẩu.</p>
+        </div>
+        <button class="modal-close" id="accountModalCloseBtn" type="button" aria-label="Đóng">×</button>
+      </div>
+
+      <div class="account-hero">
+        <div class="user-avatar account-avatar-preview" id="accountAvatar">
+          <img id="accountAvatarImage" alt="Xem trước ảnh đại diện" hidden />
+          <span id="accountAvatarInitial">U</span>
+        </div>
+        <div>
+          <div class="account-hero-title" id="accountModalHeading">Hồ sơ của bạn</div>
+        </div>
+      </div>
+
+      <form id="accountForm">
+        <div class="form-row">
+          <div class="field">
+            <label for="accountDisplayName">Tên hiển thị</label>
+            <input id="accountDisplayName" class="input" type="text" placeholder="Ví dụ: Nguyễn Văn A" />
+          </div>
+          <div class="field">
+            <label for="accountEmail">Email</label>
+            <input id="accountEmail" class="input" type="email" readonly />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="accountPhotoUrl">Link ảnh đại diện</label>
+          <input id="accountPhotoUrl" class="input" type="url" placeholder="https://example.com/avatar.jpg" />
+          <div class="field-hint">Dùng URL ảnh công khai. Để trống nếu muốn quay về avatar chữ cái.</div>
+        </div>
+
+        <div class="account-actions">
+          <button class="btn btn-primary" id="accountSaveBtn" type="submit">Lưu thay đổi</button>
+          <button class="btn btn-secondary" id="accountResetPasswordBtn" type="button">Gửi email đổi mật khẩu</button>
+          
+        </div>
+
+        <div id="accountStatus" class="status" aria-live="polite"></div>
+      </form>
+
+      <div class="account-logout-section">
+        <div class="account-logout-divider"></div>
+        <button class="account-logout-btn" id="logoutBtn" type="button">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>Đăng xuất</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+/* Design Tokens & CSS Variables */
+:root {
+  /* Colors - Semantic */
+  --bg: #f0f4f8;
+  --surface: rgba(255, 255, 255, 0.85);
+  --surface-strong: #ffffff;
+  --surface-soft: #f8fbff;
+  --text: #1e293b;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --line-soft: #f1f5f9;
+
+  /* Brand Colors */
+  --primary: #2563eb;
+  --primary-2: #0284c7;
+  --primary-soft: #eff6ff;
+  --success: #16a34a;
+  --success-bg: #f0fdf4;
+  --warning: #d97706;
+  --warning-bg: #fffbeb;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --info: #0284c7;
+  --info-bg: #f0f9ff;
+
+  /* Gradients - Modern */
+  --gradient-primary: linear-gradient(135deg, #2563eb, #0284c7);
+  --gradient-success: linear-gradient(135deg, #16a34a, #059669);
+  --gradient-warning: linear-gradient(135deg, #d97706, #ea580c);
+
+  /* Shadows - Elevation System */
+  --shadow-1: 0 4px 8px rgba(0, 0, 0, 0.08);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-3: 0 16px 40px rgba(0, 0, 0, 0.16);
+  --shadow-soft: 0 10px 25px -5px rgba(15, 23, 42, 0.05);
+  --shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.1);
+  --shadow-hover: 0 25px 50px -12px rgba(15, 23, 42, 0.15);
+
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'Fira Code', monospace;
+
+  /* Spacing Scale (8px base) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+  --space-4xl: 40px;
+  --space-5xl: 48px;
+  --space-6xl: 56px;
+
+  /* Border Radius */
+  --radius: 24px;
+  --radius-sm: 16px;
+  --radius-xs: 8px;
+  --radius-full: 999px;
+
+  /* Transitions & Animations */
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Layout */
+  --sidebar-width: 260px;
+  --navbar-height: 64px;
+  --container-max: 1300px;
+  --container-width: 92%;
+
+  /* Z-index Layers */
+  --z-dropdown: 50;
+  --z-sticky: 40;
+  --z-modal: 100;
+  --z-tooltip: 80;
+}
+
+@media (max-width: 600px) {
+  :root {
+    --sidebar-width: 0;
+  }
+}
