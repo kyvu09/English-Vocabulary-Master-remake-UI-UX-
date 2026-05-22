@@ -1,4 +1,4 @@
-// Router System - Handles page navigation and state
+// Hệ thống Router - Quản lý điều hướng trang và trạng thái
 
 class Router {
   constructor() {
@@ -34,7 +34,7 @@ class Router {
       return;
     }
 
-    // Exit animation
+    // Hiệu ứng biến mất (exit animation)
     if (pageContent.children.length > 0) {
       pageContent.children[0].classList.remove('animate-enter');
       pageContent.children[0].classList.add('animate-exit');
@@ -43,7 +43,7 @@ class Router {
 
     await this.unmountCurrentPage();
 
-    // Load new page
+    // Tải trang mới
     pageContent.innerHTML = '';
     const pageModule = this.pageModules[pageName];
 
@@ -53,13 +53,13 @@ class Router {
       return;
     }
 
-    // Render page
+    // Hiển thị trang
     try {
       const html = await pageModule.render();
       pageContent.innerHTML = html;
       pageContent.children[0]?.classList.add('animate-enter');
 
-      // Mount event handlers
+      // Gắn các trình xử lý sự kiện (mount event handlers)
       if (pageModule.mount) {
         await pageModule.mount();
       }
@@ -68,14 +68,14 @@ class Router {
         lucide.createIcons({ root: pageContent });
       }
 
-      // Update navigation
+      // Cập nhật thanh điều hướng
       this.updateActiveNav(pageName);
       this.currentPage = pageName;
 
-      // Update URL if using history API
+      // Cập nhật URL nếu sử dụng History API
       window.history.pushState({ page: pageName }, '', `#${pageName}`);
 
-      // Scroll to top
+      // Cuộn trang lên đầu
       const appContent = document.querySelector('.app-content');
       if (appContent) {
         appContent.scrollTop = 0;
@@ -110,9 +110,9 @@ class Router {
 
 export const router = new Router();
 
-// Initialize Router
+// Khởi tạo Router
 export function initRouter() {
-  // Use event delegation for nav items (handles dynamic content)
+  // Sử dụng ủy quyền sự kiện (event delegation) cho các nút điều hướng (hỗ trợ nội dung động)
   const sidebarNav = document.querySelector('.sidebar-nav');
   if (sidebarNav) {
     sidebarNav.addEventListener('click', (e) => {
@@ -127,7 +127,7 @@ export function initRouter() {
     });
   }
 
-  // Use event delegation for tab bar items
+  // Sử dụng ủy quyền sự kiện cho các tab dưới thanh điều hướng (tab bar)
   const tabBar = document.querySelector('.tab-bar-items');
   if (tabBar) {
     tabBar.addEventListener('click', (e) => {
@@ -142,7 +142,7 @@ export function initRouter() {
     });
   }
 
-  // Setup sidebar toggle system
+  // Thiết lập hệ thống đóng/mở sidebar
   const hamburgerBtn = document.getElementById('hamburgerBtn');
   const sidebar = document.getElementById('sidebar');
   const sidebarOverlay = document.getElementById('sidebarOverlay');
@@ -177,7 +177,7 @@ export function initRouter() {
     sidebarCloseBtn.addEventListener('click', closeSidebar);
   }
 
-  // Auto-close sidebar on mobile when a nav item is clicked
+  // Tự động đóng sidebar trên thiết bị di động khi nhấp vào một nút điều hướng
   if (sidebarNav) {
     sidebarNav.addEventListener('click', (e) => {
       const navItem = e.target.closest('.nav-item');
@@ -187,20 +187,20 @@ export function initRouter() {
     });
   }
 
-  // Close sidebar on Escape key
+  // Đóng sidebar khi nhấn phím Escape
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && sidebar?.classList.contains('show')) {
       closeSidebar();
     }
   });
 
-  // Handle popstate for back button (only add once)
+  // Xử lý sự kiện popstate cho nút Quay lại của trình duyệt (chỉ thêm một lần duy nhất)
   if (!window.routerPopstateAttached) {
     window.addEventListener('popstate', (e) => router.handlePopState(e));
     window.routerPopstateAttached = true;
   }
 
-  // Navigate to default page
+  // Điều hướng đến trang mặc định
   const hash = window.location.hash.slice(1) || 'dashboard';
   router.navigateTo(hash);
 }

@@ -1,10 +1,11 @@
-// Practice Page - Complete implementation with bidirectional quiz, statistics, listening
+// Module Trang Luyện tập (Practice Page) - Hỗ trợ Quiz hai chiều, thống kê chi tiết, luyện nghe
 import { auth, db } from '../../firebase-config.js';
 import { 
   collection, query, orderBy, getDocs, doc, 
   serverTimestamp, writeBatch
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { showAlert } from '../core/ui-utils.js';
+import { normalizeSearch as normalizeText } from '../core/data-utils.js';
 
 const PART_OF_SPEECH = {
   noun: 'Danh từ', verb: 'Động từ', adjective: 'Tính từ', adverb: 'Trạng từ',
@@ -232,8 +233,8 @@ function renderQuestion() {
   const isListening = quizState.mode === 'listening';
   const english = getEnglish(q);
 
-  // Listening mode: always hear English → type English (dictation)
-  // Quiz mode: show prompt based on direction as usual
+  // Chế độ nghe (Listening): luôn nghe tiếng Anh → gõ lại tiếng Anh (chép chính tả)
+  // Chế độ trắc nghiệm (Quiz): hiển thị gợi ý (prompt) dựa theo chiều dịch thông thường
   const label = isListening
     ? 'Nghe và gõ lại từ tiếng Anh'
     : (isEnVi ? 'Dịch sang tiếng Việt' : 'Dịch sang tiếng Anh');
@@ -302,7 +303,7 @@ function checkAnswer() {
   const isListening = quizState.mode === 'listening';
 
   if (!userAnswer) {
-    // Show inline warning without disabling anything so user can still type
+    // Hiển thị cảnh báo trực tiếp mà không vô hiệu hóa đầu vào để người dùng vẫn có thể tiếp tục nhập liệu
     const warning = document.getElementById('inputWarning');
     const input = document.getElementById('answerInput');
     if (warning) warning.style.display = 'block';
@@ -317,7 +318,7 @@ function checkAnswer() {
     return;
   }
 
-  // Listening mode: correct answer is always the English word itself (dictation)
+  // Chế độ Listening: câu trả lời đúng luôn luôn là chính từ tiếng Anh đó (nghe chép chính tả)
   const acceptedAnswers = isListening
     ? [normalizeText(getEnglish(q))]
     : isEnVi
@@ -340,7 +341,7 @@ function checkAnswer() {
 
   const title = correct ? '<i data-lucide="check-circle" width="16" height="16"></i> Chính xác!' : '<i data-lucide="x-circle" width="16" height="16"></i> Sai rồi!';
 
-  // Always show English word + meaning after checking (listening & quiz)
+  // Luôn hiển thị từ tiếng Anh và nghĩa đầy đủ sau khi kiểm tra xong (listening & quiz)
   const msg = correct
     ? `"${getEnglish(q)}" — nghĩa là: "${q.meaning}"`
     : isListening
@@ -348,10 +349,6 @@ function checkAnswer() {
       : `Đáp án đúng: "<strong>${quizState.answers[quizState.currentIndex].correctAnswers}</strong>" — "${isEnVi ? q.meaning : getEnglish(q)}"`;
 
   showFeedback(correct ? 'success' : 'error', title, msg);
-}
-
-function normalizeText(text = '') {
-  return String(text).trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
 }
 
 function denormalizeText(text, isViet) {
@@ -403,13 +400,13 @@ async function showResults() {
   const percent = Math.round((correct / total) * 100);
   const emoji = percent >= 80 ? '<i data-lucide="award" width="64" height="64"></i>' : percent >= 60 ? '<i data-lucide="thumbs-up" width="64" height="64"></i>' : percent >= 40 ? '<i data-lucide="minus" width="64" height="64"></i>' : '<i data-lucide="frown" width="64" height="64"></i>';
 
-  // Save to Firestore with batch update
+  // Lưu kết quả vào Firestore bằng cơ chế Write Batch
   const user = auth.currentUser;
   if (user) {
     try {
       const batch = writeBatch(db);
       
-      // Save attempt
+      // Lưu thông tin lượt làm quiz
       const attemptRef = doc(collection(db, 'users', user.uid, 'quizAttempts'));
       batch.set(attemptRef, {
         direction: quizState.direction,
@@ -421,7 +418,7 @@ async function showResults() {
         createdAt: serverTimestamp()
       });
 
-      // Update word stats
+      // Cập nhật số liệu thống kê chi tiết của từng từ vựng
       const statsByWord = new Map();
       quizState.answers.forEach(a => {
         if (!statsByWord.has(a.wordId)) {
@@ -449,6 +446,7 @@ async function showResults() {
       }
 
       await batch.commit();
+      await enforceQuizHistoryLimit(user.uid);
     } catch (err) {
       console.error('Save error:', err);
     }
@@ -687,6 +685,46 @@ function removeAndSpawnPair() {
   }
 }
 
+// Giới hạn lịch sử lưu tối đa 10 lượt làm gần nhất trong Firestore
+async function enforceQuizHistoryLimit(userId) {
+  try {
+    const q = query(
+      collection(db, 'users', userId, 'quizAttempts'),
+      orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    if (snap.size > 10) {
+      const batch = writeBatch(db);
+      for (let i = 10; i < snap.docs.length; i++) {
+        batch.delete(snap.docs[i].ref);
+      }
+      await batch.commit();
+    }
+  } catch (err) {
+    console.error('Lỗi khi giới hạn số lượng lịch sử:', err);
+  }
+}
+
+// Lưu lịch sử chế độ Match Pairs vào Firestore
+async function saveMatchPairsAttempt(userId, total, correct, percent) {
+  try {
+    const batch = writeBatch(db);
+    const attemptRef = doc(collection(db, 'users', userId, 'quizAttempts'));
+    batch.set(attemptRef, {
+      direction: 'both',
+      mode: 'matchpairs',
+      totalQuestions: total,
+      correctAnswers: correct,
+      scorePercent: percent,
+      createdAt: serverTimestamp()
+    });
+    await batch.commit();
+    await enforceQuizHistoryLimit(userId);
+  } catch (err) {
+    console.error('Lỗi khi lưu kết quả ghép cặp:', err);
+  }
+}
+
 function endMatchPairs() {
   matchState.finished = true;
   if (matchState.intervalId) {
@@ -696,6 +734,11 @@ function endMatchPairs() {
 
   const attempts = matchState.attempts || 1;
   const accuracy = Math.round((matchState.matched / attempts) * 100);
+
+  const user = auth.currentUser;
+  if (user) {
+    saveMatchPairsAttempt(user.uid, attempts, matchState.matched, accuracy);
+  }
 
   let emojiIcon = 'trophy';
   let title = 'Xuất sắc!';
@@ -740,6 +783,7 @@ function endMatchPairs() {
   if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceQuizContent') });
 }
 
+// Giải phóng bộ nhớ và dừng âm thanh khi rời trang (unmount)
 export function unmount() {
   if (matchState?.intervalId) {
     clearInterval(matchState.intervalId);

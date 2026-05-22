@@ -1,10 +1,11 @@
-// Vocabulary Page Module - Enhanced with AI lookup + POS + Statistics
+// Module Trang Từ vựng (Vocabulary Page) - Hỗ trợ tra cứu tự động + Loại từ + Thống kê
 import { auth, db } from '../../firebase-config.js';
 import { 
   collection, query, orderBy, onSnapshot, deleteDoc, doc, 
   addDoc, updateDoc, serverTimestamp, where, limit, getDocs
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { showAlert, showConfirm, showToast } from '../core/ui-utils.js';
+import { normalizeSearch } from '../core/data-utils.js';
 
 const PART_OF_SPEECH = {
   noun: 'Danh từ',
@@ -28,15 +29,6 @@ let wordModalInstance = null;
 
 function getEnglish(word = null) {
   return word?.english || word?.englishWord || '';
-}
-
-function normalizeSearch(value = '') {
-  return String(value)
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, ' ');
 }
 
 export async function render() {
@@ -151,7 +143,7 @@ export async function mount() {
   loadVocabulary();
 }
 
-// ─── Lookup từ Gemini API ────────────────────────────────────────────────────
+// ─── Tra cứu từ điển và Dịch thuật API ──────────────────────────────────────────
 
 async function lookupWord() {
   const english = document.getElementById('modalEnglishWord').value.trim();
@@ -472,6 +464,7 @@ function renderTable(data) {
   });
 }
 
+// Giải phóng bộ nhớ khi rời trang (unmount)
 export function unmount() {
   unsubscribers.forEach(u => u?.());
   unsubscribers = [];

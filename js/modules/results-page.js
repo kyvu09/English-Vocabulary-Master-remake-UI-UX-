@@ -1,4 +1,4 @@
-// Results Page - Quiz history + Rankings
+// Module Trang Kết quả (Results Page) - Lịch sử làm bài + Bảng xếp hạng
 import { auth, db } from '../../firebase-config.js';
 import { collection, query, orderBy, onSnapshot, limit } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
@@ -204,6 +204,7 @@ function loadHistory() {
   }));
 }
 
+// Giải phóng bộ nhớ khi rời trang (unmount)
 export function unmount() {
   unsubscribers.forEach(u => u?.());
   unsubscribers = [];

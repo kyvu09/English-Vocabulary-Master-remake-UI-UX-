@@ -312,13 +312,13 @@ function bindGlobalEvents() {
     router.navigateTo("vocabulary");
   });
 
-  // Theme toggle (capture phase to intercept before router)
+  // Chuyển đổi chế độ màu giao diện (bắt sự kiện ở capture phase để xử lý trước router)
   document.addEventListener("click", (e) => {
     const themesBtn = e.target.closest('[data-page="themes"]');
     if (!themesBtn) return;
     e.stopPropagation();
     toggleTheme();
-    // Close sidebar on mobile
+    // Đóng sidebar trên thiết bị di động
     if (window.innerWidth <= 768) {
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('sidebarOverlay');

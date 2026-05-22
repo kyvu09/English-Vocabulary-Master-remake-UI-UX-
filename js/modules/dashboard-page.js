@@ -1,4 +1,4 @@
-// Dashboard Page Module
+// Module Trang Tổng quan (Dashboard Page)
 import { auth, db } from '../../firebase-config.js';
 import { collection, query, orderBy, onSnapshot, limit } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
@@ -105,9 +105,9 @@ export async function render() {
 }
 
 export async function mount() {
-  // Setup event listeners
+  // Thiết lập các trình lắng nghe sự kiện
   document.getElementById('createSessionBtn')?.addEventListener('click', () => {
-    // Trigger modal or navigate to sessions page
+    // Kích hoạt hiển thị modal hoặc chuyển hướng tới trang quản lý buổi học
     window.router?.navigateTo('sessions');
   });
 
@@ -119,10 +119,10 @@ export async function mount() {
     window.router?.navigateTo('practice');
   });
 
-  // Load recent activity
+  // Tải hoạt động gần đây
   loadRecentActivity();
 
-  // Update navbar title
+  // Cập nhật tiêu đề thanh điều hướng
   const pageTitleEl = document.getElementById('pageTitle');
   if (pageTitleEl) {
     pageTitleEl.textContent = 'Dashboard';
@@ -145,7 +145,7 @@ async function getStats() {
       markLoaded();
     };
 
-    // Load vocabulary
+    // Tải danh sách từ vựng
     const vocabQuery = query(
       collection(db, 'users', user.uid, 'vocabulary'),
       orderBy('createdAt', 'desc')
@@ -162,7 +162,7 @@ async function getStats() {
       error => handleLoadError('vocabulary', error))
     );
 
-    // Load sessions
+    // Tải danh sách buổi học
     const sessionsQuery = query(
       collection(db, 'users', user.uid, 'sessions'),
       orderBy('createdAt', 'desc')
@@ -176,7 +176,7 @@ async function getStats() {
       error => handleLoadError('sessions', error))
     );
 
-    // Load quiz attempts
+    // Tải danh sách bài quiz đã thực hiện
     const quizzesQuery = query(
       collection(db, 'users', user.uid, 'quizAttempts'),
       orderBy('createdAt', 'desc')
@@ -251,7 +251,7 @@ function loadRecentActivity() {
   );
 }
 
-// Cleanup on unmount
+// Giải phóng bộ nhớ khi rời trang (unmount)
 export function unmount() {
   unsubscribers.forEach(unsub => unsub?.());
   unsubscribers = [];

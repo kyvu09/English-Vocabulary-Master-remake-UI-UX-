@@ -1,24 +1,13 @@
-// Sessions Page Module
+// Module Trang Buổi học (Sessions Page)
 import { auth, db } from '../../firebase-config.js';
 import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { showAlert, showConfirm } from '../core/ui-utils.js';
+import { normalizeText, slugify } from '../core/data-utils.js';
 
 let unsubscribers = [];
 let sessions = [];
 let vocabulary = [];
 let sessionModalInstance = null;
-
-function normalizeText(value = '') {
-  return String(value).trim().toLowerCase().replace(/\s+/g, ' ');
-}
-
-function slugify(value = '') {
-  return normalizeText(value)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-');
-}
 
 export async function render() {
   return `
@@ -238,6 +227,7 @@ function renderSessions() {
   });
 }
 
+// Giải phóng bộ nhớ khi rời trang (unmount)
 export function unmount() {
   unsubscribers.forEach(u => u?.());
   unsubscribers = [];

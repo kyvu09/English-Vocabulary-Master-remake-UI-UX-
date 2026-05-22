@@ -20,17 +20,17 @@ const refs = {
   authTabs: document.querySelectorAll(".auth-tab"),
   authMessage: document.getElementById("authMessage"),
   
-  // Panels
+  // Các khung giao diện (Panels)
   loginPanel: document.getElementById("loginPanel"),
   registerPanel: document.getElementById("registerPanel"),
   forgotPasswordPanel: document.getElementById("forgotPasswordPanel"),
   
-  // Forms
+  // Các biểu mẫu (Forms)
   loginForm: document.getElementById("loginForm"),
   registerForm: document.getElementById("registerForm"),
   forgotPasswordForm: document.getElementById("forgotPasswordForm"),
   
-  // Buttons & Links
+  // Các nút bấm & Liên kết (Buttons & Links)
   googleLoginBtn: document.getElementById("googleLoginBtn"),
   googleRegisterBtn: document.getElementById("googleRegisterBtn"),
   btnShowForgotPassword: document.getElementById("btnShowForgotPassword"),
