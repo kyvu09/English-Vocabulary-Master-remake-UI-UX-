@@ -24,33 +24,33 @@
           <span>EV Master</span>
         </a>
         <button class="sidebar-close-btn" id="sidebarCloseBtn" type="button" aria-label="Đóng menu">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <i data-lucide="x"></i>
         </button>
       </div>
 
       <div class="sidebar-nav">
         <button class="nav-item active" type="button" data-page="dashboard">
-          <span class="nav-icon">🏠</span>
+          <span class="nav-icon"><i data-lucide="home"></i></span>
           <span>Dashboard</span>
         </button>
         <button class="nav-item" type="button" data-page="vocabulary">
-          <span class="nav-icon">📚</span>
+          <span class="nav-icon"><i data-lucide="book-open"></i></span>
           <span>Từ vựng</span>
         </button>
         <button class="nav-item" type="button" data-page="sessions">
-          <span class="nav-icon">🎯</span>
+          <span class="nav-icon"><i data-lucide="target"></i></span>
           <span>Buổi học</span>
         </button>
         <button class="nav-item" type="button" data-page="practice">
-          <span class="nav-icon">✍️</span>
+          <span class="nav-icon"><i data-lucide="pen-tool"></i></span>
           <span>Luyện tập</span>
         </button>
         <button class="nav-item" type="button" data-page="results">
-          <span class="nav-icon">📊</span>
+          <span class="nav-icon"><i data-lucide="bar-chart-2"></i></span>
           <span>Kết quả</span>
         </button>
         <button class="nav-item" type="button" data-page="themes">
-          <span class="nav-icon" id="themeIcon">☀️</span>
+          <span class="nav-icon" id="themeIcon"><i data-lucide="sun"></i></span>
           <span style="flex:1">Chủ đề</span>
           <span class="theme-switch" id="themeSwitch">
             <span class="theme-switch-slider" id="themeSlider"></span>
@@ -69,7 +69,7 @@
             <div class="user-email" id="userEmail">...</div>
           </div>
           <span class="user-profile-arrow">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <i data-lucide="chevron-right" width="16" height="16"></i>
           </span>
         </button>
       </div>
@@ -95,23 +95,23 @@
     <div class="tab-bar">
       <div class="tab-bar-items">
         <button class="tab-bar-item active" type="button" data-page="dashboard">
-          <span class="tab-bar-icon">🏠</span>
+          <span class="tab-bar-icon"><i data-lucide="home"></i></span>
           <span>Dashboard</span>
         </button>
         <button class="tab-bar-item" type="button" data-page="vocabulary">
-          <span class="tab-bar-icon">📚</span>
+          <span class="tab-bar-icon"><i data-lucide="book-open"></i></span>
           <span>Từ vựng</span>
         </button>
         <button class="tab-bar-item" type="button" data-page="sessions">
-          <span class="tab-bar-icon">🎯</span>
+          <span class="tab-bar-icon"><i data-lucide="target"></i></span>
           <span>Buổi học</span>
         </button>
         <button class="tab-bar-item" type="button" data-page="practice">
-          <span class="tab-bar-icon">✍️</span>
+          <span class="tab-bar-icon"><i data-lucide="pen-tool"></i></span>
           <span>Luyện tập</span>
         </button>
         <button class="tab-bar-item" type="button" data-page="results">
-          <span class="tab-bar-icon">📊</span>
+          <span class="tab-bar-icon"><i data-lucide="bar-chart-2"></i></span>
           <span>Kết quả</span>
         </button>
       </div>
@@ -174,7 +174,7 @@
           <hr class="my-4">
 
           <button class="account-logout-btn w-100" id="logoutBtn" type="button">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <i data-lucide="log-out" width="20" height="20"></i>
             <span class="ms-2">Đăng xuất</span>
           </button>
         </div>
@@ -184,6 +184,14 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="env-config.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    });
+  </script>
   <script type="module" src="app.js"></script>
 </body>
 </html>

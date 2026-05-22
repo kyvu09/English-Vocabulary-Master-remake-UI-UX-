@@ -46,7 +46,9 @@ export async function render() {
         <h1 class="page-title">Từ vựng</h1>
         <p class="page-subtitle">Quản lý từ vựng và theo dõi tiến độ</p>
         <div class="page-actions">
-          <button class="btn btn-primary" id="addNewWordBtn">➕ Thêm từ mới</button>
+          <button class="btn btn-primary d-flex align-items-center gap-2" id="addNewWordBtn">
+            <i data-lucide="plus" width="18" height="18"></i> Thêm từ mới
+          </button>
         </div>
       </div>
 
@@ -68,7 +70,7 @@ export async function render() {
 
         <div id="wordTableContainer" class="table-wrap">
           <div class="table-empty">
-            <div class="table-empty-icon">📚</div>
+            <div class="table-empty-icon"><i data-lucide="book-open"></i></div>
             <p>Chưa có từ vựng nào</p>
           </div>
         </div>
@@ -85,7 +87,7 @@ export async function render() {
                 <label class="form-label fw-semibold">Từ tiếng Anh *</label>
                 <input id="modalEnglishWord" class="form-control" type="text" placeholder="apple" />
               </div>
-              <button id="lookupBtn" class="btn btn-outline-primary align-self-end">🔍 Tìm</button>
+              <button id="lookupBtn" class="btn btn-outline-primary align-self-end d-flex align-items-center gap-1"><i data-lucide="search" width="18" height="18"></i> Tìm</button>
             </div>
 
             <div id="lookupStatus" class="alert alert-info py-2 px-3 small d-none"></div>
@@ -118,7 +120,7 @@ export async function render() {
 
             <div class="d-flex gap-2 justify-content-end mt-4">
               <button class="btn btn-outline-secondary" id="wordModalCancelBtn">Hủy</button>
-              <button class="btn btn-primary" id="wordModalSaveBtn">💾 Lưu</button>
+              <button class="btn btn-primary d-flex align-items-center gap-1" id="wordModalSaveBtn"><i data-lucide="save" width="18" height="18"></i> Lưu</button>
             </div>
           </div>
         </div>
@@ -413,7 +415,8 @@ function renderTable(data) {
   if (!container) return;
 
   if (data.length === 0) {
-    container.innerHTML = `<div class="table-empty"><div class="table-empty-icon">📚</div><p>Không tìm thấy từ vựng</p></div>`;
+    container.innerHTML = `<div class="table-empty"><div class="table-empty-icon"><i data-lucide="book-open"></i></div><p>Không tìm thấy từ vựng</p></div>`;
+    if (window.lucide) lucide.createIcons({ root: container });
     return;
   }
 
@@ -441,8 +444,8 @@ function renderTable(data) {
               <td>${word.meaning}</td>
               <td><span class="badge bg-${accBadge}-subtle text-${accBadge}-emphasis">${acc}%</span></td>
               <td>
-                <button class="btn btn-sm btn-outline-secondary border-0 word-edit-btn" data-id="${word.id}">✏️</button>
-                <button class="btn btn-sm btn-outline-danger border-0 word-delete-btn" data-id="${word.id}">🗑️</button>
+                <button class="btn btn-sm btn-outline-secondary border-0 word-edit-btn" data-id="${word.id}" title="Sửa"><i data-lucide="pencil" width="16" height="16"></i></button>
+                <button class="btn btn-sm btn-outline-danger border-0 word-delete-btn" data-id="${word.id}" title="Xóa"><i data-lucide="trash-2" width="16" height="16"></i></button>
               </td>
             </tr>
           `;
@@ -450,6 +453,8 @@ function renderTable(data) {
       </tbody>
     </table>
   `;
+
+  if (window.lucide) lucide.createIcons({ root: container });
 
   container.querySelectorAll('.word-edit-btn').forEach(btn => {
     btn.addEventListener('click', () => {

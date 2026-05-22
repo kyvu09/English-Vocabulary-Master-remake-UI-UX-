@@ -340,8 +340,13 @@ function toggleTheme() {
 }
 
 function updateThemeUI(theme) {
-  const icon = document.getElementById('themeIcon');
-  if (icon) icon.textContent = theme === 'dark' ? '🌙' : '☀️';
+  const iconContainer = document.getElementById('themeIcon');
+  if (iconContainer) {
+    iconContainer.innerHTML = `<i data-lucide="${theme === 'dark' ? 'moon' : 'sun'}"></i>`;
+    if (window.lucide) {
+      lucide.createIcons({ root: iconContainer });
+    }
+  }
 }
 
 function initTheme() {

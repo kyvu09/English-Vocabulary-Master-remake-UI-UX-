@@ -27,7 +27,9 @@ export async function render() {
         <h1 class="page-title">Quản lý buổi học</h1>
         <p class="page-subtitle">Tạo và quản lý các buổi học của bạn</p>
         <div class="page-actions">
-          <button class="btn btn-primary" id="createNewSessionBtn">➕ Tạo buổi học mới</button>
+          <button class="btn btn-primary d-flex align-items-center gap-2" id="createNewSessionBtn">
+            <i data-lucide="plus" width="18" height="18"></i> Tạo buổi học mới
+          </button>
         </div>
       </div>
 
@@ -41,7 +43,7 @@ export async function render() {
         <div id="sessionsContainer" class="row g-3 stagger-fade">
           <div class="col-12">
             <div class="table-empty">
-              <div class="table-empty-icon">🎯</div>
+              <div class="table-empty-icon"><i data-lucide="target"></i></div>
               <p>Chưa có buổi học nào. Hãy tạo buổi học đầu tiên!</p>
             </div>
           </div>
@@ -59,7 +61,7 @@ export async function render() {
             </div>
             <div class="d-flex gap-2 justify-content-end mt-4">
               <button class="btn btn-outline-secondary" id="sessionModalCancelBtn">Hủy</button>
-              <button class="btn btn-primary" id="sessionModalSaveBtn">💾 Tạo</button>
+              <button class="btn btn-primary d-flex align-items-center gap-1" id="sessionModalSaveBtn"><i data-lucide="save" width="18" height="18"></i> Tạo</button>
             </div>
           </div>
         </div>
@@ -110,7 +112,8 @@ async function createSession() {
 
   const saveBtn = document.getElementById('sessionModalSaveBtn');
   saveBtn.disabled = true;
-  saveBtn.textContent = '⏳ Đang tạo...';
+  saveBtn.innerHTML = '<i data-lucide="loader" width="18" height="18"></i> Đang tạo...';
+  if (window.lucide) lucide.createIcons({ root: saveBtn });
 
   try {
     await addDoc(collection(db, 'users', user.uid, 'sessions'), {
@@ -124,7 +127,8 @@ async function createSession() {
     await showAlert('Tạo thất bại: ' + err.message, 'Lỗi');
   } finally {
     saveBtn.disabled = false;
-    saveBtn.textContent = '💾 Tạo';
+    saveBtn.innerHTML = '<i data-lucide="save" width="18" height="18"></i> Tạo';
+    if (window.lucide) lucide.createIcons({ root: saveBtn });
   }
 }
 
@@ -182,7 +186,7 @@ function renderSessions() {
     container.innerHTML = `
       <div class="col-12">
         <div class="table-empty">
-          <div class="table-empty-icon">🎯</div>
+          <div class="table-empty-icon"><i data-lucide="target"></i></div>
           <p>Chưa có buổi học nào. Hãy tạo buổi học đầu tiên!</p>
         </div>
       </div>
@@ -195,17 +199,19 @@ function renderSessions() {
       <div class="card h-100 hover-lift" style="position:relative;">
         <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
           <h3 class="m-0 fs-5 flex-grow-1">${session.name}</h3>
-          <button class="btn btn-sm btn-outline-danger border-0 session-delete-btn p-1" data-id="${session.id}" title="Xóa buổi học">🗑️</button>
+          <button class="btn btn-sm btn-outline-danger border-0 session-delete-btn p-1" data-id="${session.id}" title="Xóa buổi học"><i data-lucide="trash-2" width="16" height="16"></i></button>
         </div>
         <div class="stat-label mb-1">Số từ vựng</div>
         <div class="stat-count" style="font-size:1.8rem;">${getWordCount(session)}</div>
         <div class="d-flex gap-2 mt-4">
-          <button class="btn btn-primary btn-sm flex-fill session-study-btn" data-id="${session.id}" data-name="${session.name}">📖 Luyện tập</button>
-          <button class="btn btn-outline-secondary btn-sm flex-fill session-vocab-btn" data-id="${session.id}" data-name="${session.name}">📚 Xem từ</button>
+          <button class="btn btn-primary btn-sm flex-fill session-study-btn d-flex align-items-center justify-content-center gap-1" data-id="${session.id}" data-name="${session.name}"><i data-lucide="book-open" width="16" height="16"></i> Luyện tập</button>
+          <button class="btn btn-outline-secondary btn-sm flex-fill session-vocab-btn d-flex align-items-center justify-content-center gap-1" data-id="${session.id}" data-name="${session.name}"><i data-lucide="library" width="16" height="16"></i> Xem từ</button>
         </div>
       </div>
     </div>
   `).join('');
+
+  if (window.lucide) lucide.createIcons({ root: container });
 
   container.querySelectorAll('.session-delete-btn').forEach(btn => {
     btn.addEventListener('click', () => deleteSession(btn.dataset.id));

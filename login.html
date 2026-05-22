@@ -230,15 +230,15 @@
 
       <div class="login-features">
         <div class="login-feature-item">
-          <h3>🎯 Quản lý buổi học</h3>
+          <h3 class="d-flex align-items-center gap-2"><i data-lucide="target"></i> Quản lý buổi học</h3>
           <p>Tạo từng buổi học rõ ràng, sắp xếp và gán từ vựng vào đúng buổi cần học.</p>
         </div>
         <div class="login-feature-item">
-          <h3>🤖 Gợi ý tự động (AI)</h3>
+          <h3 class="d-flex align-items-center gap-2"><i data-lucide="bot"></i> Gợi ý tự động (AI)</h3>
           <p>Tự động tra phiên âm, từ loại và nghĩa thông dụng khi bạn nhập từ tiếng Anh.</p>
         </div>
         <div class="login-feature-item">
-          <h3>🎮 Luyện tập đa chế độ</h3>
+          <h3 class="d-flex align-items-center gap-2"><i data-lucide="gamepad-2"></i> Luyện tập đa chế độ</h3>
           <p>Ôn luyện dễ dàng và toàn diện qua các chế độ: Spelling, Listening và Sentence.</p>
         </div>
       </div>
@@ -331,7 +331,13 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="env-config.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    });
     // Initialize theme from localStorage
     (function() {
       var saved = localStorage.getItem("app-theme");

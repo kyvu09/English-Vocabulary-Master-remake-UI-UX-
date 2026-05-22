@@ -38,7 +38,7 @@ export async function render() {
               <div class="stat-card h-100">
                 <div class="stat-label">Từ đã thuộc</div>
                 <div class="stat-count">${stats.learnedWords}</div>
-                <div class="stat-change positive">✅ ${Math.round((stats.learnedWords / Math.max(stats.totalWords, 1)) * 100)}%</div>
+                <div class="stat-change positive d-flex align-items-center gap-1"><i data-lucide="check" width="14" height="14"></i> ${Math.round((stats.learnedWords / Math.max(stats.totalWords, 1)) * 100)}%</div>
               </div>
             </div>
             <div class="col-6 col-md-3">
@@ -66,7 +66,7 @@ export async function render() {
           </div>
           <div id="recentActivityContainer" class="stagger-fade">
             <div class="table-empty">
-              <div class="table-empty-icon">📝</div>
+              <div class="table-empty-icon"><i data-lucide="file-text"></i></div>
               <p>Chưa có hoạt động nào. Hãy bắt đầu thêm từ vựng!</p>
             </div>
           </div>
@@ -76,7 +76,7 @@ export async function render() {
         <div class="card">
           <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
             <div>
-              <h2 class="m-0">💡 Mẹo học tập</h2>
+              <h2 class="m-0 d-flex align-items-center gap-2"><i data-lucide="lightbulb"></i> Mẹo học tập</h2>
               <div class="text-muted small mt-1">Làm theo những gợi ý này để học hiệu quả</div>
             </div>
           </div>
@@ -210,10 +210,11 @@ function loadRecentActivity() {
       if (snapshot.empty) {
         container.innerHTML = `
           <div class="table-empty">
-            <div class="table-empty-icon">📝</div>
+            <div class="table-empty-icon"><i data-lucide="file-text"></i></div>
             <p>Chưa có hoạt động nào. Hãy bắt đầu thêm từ vựng!</p>
           </div>
         `;
+        if (window.lucide) lucide.createIcons({ root: container });
         return;
       }
 
@@ -245,6 +246,7 @@ function loadRecentActivity() {
           </table>
         </div>
       `;
+      if (window.lucide) lucide.createIcons({ root: container });
     })
   );
 }

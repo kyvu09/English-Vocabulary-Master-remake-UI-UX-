@@ -64,6 +64,10 @@ class Router {
         await pageModule.mount();
       }
 
+      if (window.lucide) {
+        lucide.createIcons({ root: pageContent });
+      }
+
       // Update navigation
       this.updateActiveNav(pageName);
       this.currentPage = pageName;

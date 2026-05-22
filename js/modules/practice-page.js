@@ -60,12 +60,13 @@ export async function mount() {
   if (!allWords.length) {
     document.getElementById('practiceContent').innerHTML = `
       <div class="card" style="text-align:center; padding:48px;">
-        <div style="font-size:3rem; margin-bottom:16px;">📚</div>
+        <div style="color:var(--primary); margin-bottom:16px;"><i data-lucide="book-open" width="48" height="48"></i></div>
         <h3>Chưa có từ vựng</h3>
         <p>Vui lòng thêm từ vựng trước khi luyện tập</p>
-        <button class="btn btn-primary" onclick="window.router?.navigateTo('vocabulary')" style="margin-top:16px;">➕ Thêm từ vựng</button>
+        <button class="btn btn-primary d-inline-flex align-items-center gap-2 justify-content-center" onclick="window.router?.navigateTo('vocabulary')" style="margin-top:16px;"><i data-lucide="plus" width="18" height="18"></i> Thêm từ vựng</button>
       </div>
     `;
+    if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceContent') });
     return;
   }
 
@@ -75,7 +76,7 @@ export async function mount() {
 function showQuizConfig() {
   document.getElementById('practiceContent').innerHTML = `
     <div class="card">
-      <h2 class="m-0 mb-4">⚙️ Cấu hình Quiz</h2>
+      <h2 class="m-0 mb-4 d-flex align-items-center gap-2"><i data-lucide="settings"></i> Cấu hình Quiz</h2>
       
       <div class="row g-3 mb-4">
         <div class="col-sm-6">
@@ -100,18 +101,19 @@ function showQuizConfig() {
         <div class="col-sm-6">
           <label class="form-label fw-semibold">Chế độ</label>
           <select id="modeSelect" class="form-select">
-            <option value="quiz">📝 Quiz Văn bản</option>
-            <option value="listening">🎧 Listening</option>
+            <option value="quiz">Quiz Văn bản</option>
+            <option value="listening">Listening</option>
           </select>
         </div>
       </div>
 
       <div class="d-flex gap-2">
-        <button id="startQuizBtn" class="btn btn-primary flex-fill">🎯 Bắt đầu Quiz</button>
+        <button id="startQuizBtn" class="btn btn-primary flex-fill d-flex align-items-center justify-content-center gap-2"><i data-lucide="play" width="18" height="18"></i> Bắt đầu Quiz</button>
         <button id="cancelBtn" class="btn btn-outline-secondary">Hủy</button>
       </div>
     </div>
   `;
+  if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceContent') });
 
   document.getElementById('startQuizBtn').addEventListener('click', startQuiz);
   document.getElementById('cancelBtn').addEventListener('click', () => window.router?.navigateTo('dashboard'));
@@ -194,7 +196,7 @@ function renderQuestion() {
 
   const prompt = isEnVi ? english : q.meaning;
   const promptDisplay = isListening
-    ? `<div style="font-size:3rem; margin-bottom:8px;">🎧</div>
+    ? `<div style="color:var(--primary); margin-bottom:8px;"><i data-lucide="headphones" width="48" height="48"></i></div>
        <div style="font-size:1rem; color:var(--muted);">Hãy nghe và gõ lại đúng từ tiếng Anh</div>`
     : `<div style="font-size:2rem; font-weight:700; color:var(--primary); margin-bottom:16px;">${prompt}</div>
        ${!isEnVi ? '' : `<div style="font-size:0.9rem; color:var(--muted);">Loại từ: <strong>${PART_OF_SPEECH[q.partOfSpeech] || q.partOfSpeech}</strong></div>`}`;
@@ -203,7 +205,7 @@ function renderQuestion() {
     <div class="card">
       <div class="d-flex justify-content-between align-items-center mb-2">
         <span class="text-muted small">Câu ${quizState.currentIndex + 1}/${quizState.questions.length}</span>
-        <span class="badge bg-success-subtle text-success-emphasis">✅ ${quizState.score} đúng</span>
+        <span class="badge bg-success-subtle text-success-emphasis d-inline-flex align-items-center gap-1"><i data-lucide="check" width="12" height="12"></i> ${quizState.score} đúng</span>
       </div>
       <div class="progress-gradient mb-4">
         <div class="progress-bar" style="width:${progress}%;"></div>
@@ -218,7 +220,7 @@ function renderQuestion() {
   if (isListening) {
     html += `
       <div class="text-center mb-4">
-        <button id="speakBtn" class="btn btn-primary btn-lg px-5">🔊 Nghe lại</button>
+        <button id="speakBtn" class="btn btn-primary btn-lg px-5 d-inline-flex align-items-center gap-2"><i data-lucide="volume-2"></i> Nghe lại</button>
       </div>
     `;
   }
@@ -229,13 +231,14 @@ function renderQuestion() {
       <div id="inputWarning" class="small text-danger mt-1" style="display:none;">⚠️ Hãy nhập câu trả lời trước khi kiểm tra.</div>
     </div>
     <div class="d-flex gap-2">
-      <button id="submitBtn" class="btn btn-primary flex-fill">✓ Kiểm tra</button>
-      <button id="skipBtn" class="btn btn-outline-secondary flex-fill">⏭️ Bỏ qua</button>
+      <button id="submitBtn" class="btn btn-primary flex-fill d-flex align-items-center justify-content-center gap-2"><i data-lucide="check-circle" width="18" height="18"></i> Kiểm tra</button>
+      <button id="skipBtn" class="btn btn-outline-secondary flex-fill d-flex align-items-center justify-content-center gap-2"><i data-lucide="skip-forward" width="18" height="18"></i> Bỏ qua</button>
     </div>
     <div id="feedback"></div>
   `;
 
   document.getElementById('practiceContent').innerHTML = html;
+  if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceContent') });
 
   document.getElementById('submitBtn').addEventListener('click', checkAnswer);
   document.getElementById('skipBtn').addEventListener('click', () => nextQuestion(null));
@@ -291,7 +294,7 @@ function checkAnswer() {
     correctAnswers: isListening ? getEnglish(q) : acceptedAnswers.map(a => denormalizeText(a, isEnVi)).join(' / ')
   });
 
-  const title = correct ? '✅ Chính xác!' : '❌ Sai rồi!';
+  const title = correct ? '<i data-lucide="check-circle" width="16" height="16"></i> Chính xác!' : '<i data-lucide="x-circle" width="16" height="16"></i> Sai rồi!';
 
   // Always show English word + meaning after checking (listening & quiz)
   const msg = correct
@@ -335,6 +338,8 @@ function showFeedback(type, title, msg) {
     </div>
   `;
 
+  if (window.lucide) lucide.createIcons({ root: document.getElementById('feedback') });
+
   document.getElementById('nextBtn').addEventListener('click', () => nextQuestion(quizState.answers[quizState.currentIndex]));
 }
 
@@ -352,7 +357,7 @@ async function showResults() {
   const total = quizState.answers.length;
   const correct = quizState.answers.filter(a => a.correct).length;
   const percent = Math.round((correct / total) * 100);
-  const emoji = percent >= 80 ? '🏆' : percent >= 60 ? '😊' : percent >= 40 ? '😐' : '😢';
+  const emoji = percent >= 80 ? '<i data-lucide="award" width="64" height="64"></i>' : percent >= 60 ? '<i data-lucide="thumbs-up" width="64" height="64"></i>' : percent >= 40 ? '<i data-lucide="minus" width="64" height="64"></i>' : '<i data-lucide="frown" width="64" height="64"></i>';
 
   // Save to Firestore with batch update
   const user = auth.currentUser;
@@ -418,7 +423,7 @@ async function showResults() {
           ${quizState.answers.map(a => `
             <div class="d-flex align-items-start gap-2 p-2 mb-2 rounded-3 ${a.correct ? 'bg-success-subtle' : 'bg-danger-subtle'}" style="border-left:4px solid ${a.correct ? 'var(--success)' : 'var(--danger)'};">
               <div>
-                <div class="fw-bold small">${a.correct ? '✅' : '❌'} ${a.english}</div>
+                <div class="fw-bold small d-flex align-items-center gap-1">${a.correct ? '<i data-lucide="check" width="14" height="14"></i>' : '<i data-lucide="x" width="14" height="14"></i>'} ${a.english}</div>
                 <div class="small ${a.correct ? 'text-success-emphasis' : 'text-danger-emphasis'}">
                   ${a.correct ? `✓ Đúng` : `❌ Sai - Đáp án: ${a.correctAnswers}`}
                 </div>
@@ -429,12 +434,13 @@ async function showResults() {
       </div>
 
       <div class="d-flex gap-2 justify-content-center flex-wrap">
-        <button class="btn btn-outline-secondary" onclick="location.reload()">← Làm lại</button>
-        <button class="btn btn-outline-primary" onclick="window.router?.navigateTo('results')">📊 Xem lịch sử</button>
-        <button class="btn btn-primary" onclick="window.router?.navigateTo('dashboard')">🏠 Trang chủ</button>
+        <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" onclick="location.reload()"><i data-lucide="rotate-ccw" width="18" height="18"></i> Làm lại</button>
+        <button class="btn btn-outline-primary d-inline-flex align-items-center gap-1" onclick="window.router?.navigateTo('results')"><i data-lucide="bar-chart-2" width="18" height="18"></i> Xem lịch sử</button>
+        <button class="btn btn-primary d-inline-flex align-items-center gap-1" onclick="window.router?.navigateTo('dashboard')"><i data-lucide="home" width="18" height="18"></i> Trang chủ</button>
       </div>
     </div>
   `;
+  if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceContent') });
 }
 
 function shuffle(arr) {

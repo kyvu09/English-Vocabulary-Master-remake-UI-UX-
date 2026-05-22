@@ -26,13 +26,13 @@ export async function render() {
         <div class="card hover-lift">
           <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
             <div>
-              <h2 class="m-0">🏆 Từ đã thuộc</h2>
+              <h2 class="m-0 d-flex align-items-center gap-2"><i data-lucide="award"></i> Từ đã thuộc</h2>
               <div class="text-muted small mt-1">Các từ với độ chính xác ≥ 80%</div>
             </div>
           </div>
           <div id="rankingContainer" class="table-wrap">
             <div class="table-empty">
-              <div class="table-empty-icon">📊</div>
+              <div class="table-empty-icon"><i data-lucide="bar-chart-2"></i></div>
               <p>Chưa có từ nào đạt tiêu chuẩn</p>
             </div>
           </div>
@@ -42,13 +42,13 @@ export async function render() {
         <div class="card hover-lift">
           <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
             <div>
-              <h2 class="m-0">📝 Lịch sử Quiz</h2>
+              <h2 class="m-0 d-flex align-items-center gap-2"><i data-lucide="file-text"></i> Lịch sử Quiz</h2>
               <div class="text-muted small mt-1">Các bài kiểm tra gần đây</div>
             </div>
           </div>
           <div id="historyContainer" class="table-wrap">
             <div class="table-empty">
-              <div class="table-empty-icon">📋</div>
+              <div class="table-empty-icon"><i data-lucide="clipboard-list"></i></div>
               <p>Chưa có bài quiz nào</p>
             </div>
           </div>
@@ -95,10 +95,11 @@ function loadRanking() {
     if (mastered.length === 0) {
       container.innerHTML = `
         <div class="table-empty">
-          <div class="table-empty-icon">📊</div>
+          <div class="table-empty-icon"><i data-lucide="bar-chart-2"></i></div>
           <p>Chưa có từ nào đạt tiêu chuẩn</p>
         </div>
       `;
+      if (window.lucide) lucide.createIcons({ root: container });
       return;
     }
 
@@ -132,6 +133,7 @@ function loadRanking() {
         </tbody>
       </table>
     `;
+    if (window.lucide) lucide.createIcons({ root: container });
   }));
 }
 
@@ -152,10 +154,11 @@ function loadHistory() {
     if (snapshot.empty) {
       container.innerHTML = `
         <div class="table-empty">
-          <div class="table-empty-icon">📋</div>
+          <div class="table-empty-icon"><i data-lucide="clipboard-list"></i></div>
           <p>Chưa có bài quiz nào</p>
         </div>
       `;
+      if (window.lucide) lucide.createIcons({ root: container });
       return;
     }
 
@@ -180,12 +183,13 @@ function loadHistory() {
             const scorePercent = d.scorePercent ?? d.percent ?? Math.round((correctAnswers / Math.max(totalQuestions, 1)) * 100);
             const scoreBadge = scorePercent >= 80 ? 'success' : scorePercent >= 60 ? 'warning' : 'danger';
             const direction = d.direction || d.directionMode;
-            const directionLabel = direction === 'en-vi' ? '🇺🇸→🇻🇳' : direction === 'vi-en' ? '🇻🇳→🇺🇸' : '↔️ Cả hai';
+            const directionLabel = direction === 'en-vi' ? 'EN → VI' : direction === 'vi-en' ? 'VI → EN' : '<i data-lucide="arrow-left-right" width="14" height="14"></i> Cả hai';
+            const modeIcon = d.mode === 'listening' ? '<i data-lucide="headphones" width="14" height="14"></i>' : '<i data-lucide="file-text" width="14" height="14"></i>';
 
             return `
               <tr>
                 <td class="small">${date.toLocaleString('vi-VN')}</td>
-                <td><span class="badge bg-primary-subtle text-primary-emphasis">${d.mode === 'listening' ? '🎧' : '📝'} ${d.mode === 'listening' ? 'Listening' : 'Quiz'}</span></td>
+                <td><span class="badge bg-primary-subtle text-primary-emphasis d-inline-flex align-items-center gap-1">${modeIcon} ${d.mode === 'listening' ? 'Listening' : 'Quiz'}</span></td>
                 <td>${directionLabel}</td>
                 <td>${totalQuestions}</td>
                 <td class="fw-semibold">${correctAnswers}/${totalQuestions}</td>
@@ -196,6 +200,7 @@ function loadHistory() {
         </tbody>
       </table>
     `;
+    if (window.lucide) lucide.createIcons({ root: container });
   }));
 }
 
