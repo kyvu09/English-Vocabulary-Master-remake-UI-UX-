@@ -18,6 +18,7 @@ let quizState = null;
 let allMeanings = [];
 let sessionFilter = null;
 let defaultSourceId = 'all';
+let selectedMode = 'quiz';
 
 function getEnglish(word = {}) {
   return word.english || word.englishWord || '';
@@ -90,7 +91,7 @@ function showQuizConfig() {
       <div class="row g-3 mb-4" id="modeCardsContainer">
         ${modes.map((m, i) => `
           <div class="col-sm-4">
-            <div class="card h-100 mode-card ${i === 0 ? 'mode-card-selected' : ''}" data-mode="${m.value}" style="cursor:pointer; text-align:center; padding:20px 16px; border:2px solid ${i === 0 ? m.color : 'var(--border)'};">
+            <div class="card h-100 mode-card ${i === 0 ? 'mode-card-selected' : ''}" data-mode="${m.value}" style="cursor:pointer; text-align:center; padding:20px 16px; border:2px solid ${i === 0 ? m.color : 'var(--line)'}; opacity: ${i === 0 ? '1' : '0.85'}; transition: all var(--transition-fast);">
               <div style="font-size:2rem; color:${m.color}; margin-bottom:8px;"><i data-lucide="${m.icon}" width="32" height="32"></i></div>
               <h4 class="m-0 fs-6 fw-bold" style="color:${m.color};">${m.label}</h4>
               <p class="text-muted small mt-1 mb-0" style="line-height:1.4;">${m.desc}</p>
@@ -131,16 +132,24 @@ function showQuizConfig() {
   if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceConfig') });
 
   // Mode card selection – use event delegation so clicks on child elements work
-  const modeColors = { quiz: 'var(--primary)', listening: '#7c3aed', matchpairs: '#e11d48' };
+  selectedMode = 'quiz'; // Reset to default each time config is shown
+  const modeColors = { quiz: '#2563eb', listening: '#7c3aed', matchpairs: '#e11d48' };
   document.getElementById('modeCardsContainer').addEventListener('click', (e) => {
     const card = e.target.closest('.mode-card');
     if (!card) return;
+    const newMode = card.dataset.mode;
+    if (!newMode) return;
+
+    selectedMode = newMode;
+
     document.querySelectorAll('.mode-card').forEach(c => {
       c.classList.remove('mode-card-selected');
-      c.style.borderColor = 'var(--border)';
+      c.style.borderColor = 'var(--line)';
+      c.style.opacity = '0.85';
     });
     card.classList.add('mode-card-selected');
-    card.style.borderColor = modeColors[card.dataset.mode] || 'var(--primary)';
+    card.style.borderColor = modeColors[newMode] || '#2563eb';
+    card.style.opacity = '1';
   });
 
   document.getElementById('startQuizBtn').addEventListener('click', startQuiz);
@@ -151,7 +160,7 @@ async function startQuiz() {
   const direction = document.getElementById('directionSelect').value;
   const sourceId = document.getElementById('sourceSelect').value;
   const wordCount = parseInt(document.getElementById('wordCountInput').value) || 10;
-  const mode = document.querySelector('.mode-card-selected')?.dataset?.mode || 'quiz';
+  const mode = selectedMode || 'quiz';
 
   const selectedSession = sessions.find(s => s.id === sourceId);
   let words = sourceId === 'all'
