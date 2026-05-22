@@ -1,4 +1,4 @@
-/* Multi-Page Layout System */
+/* Hệ thống bố cục đa trang */
 
 * {
   box-sizing: border-box;
@@ -45,15 +45,15 @@ textarea {
   font: inherit;
 }
 
-/* Main App Layout */
+/* Bố cục ứng dụng chính */
 .app-wrapper {
   display: flex;
   height: 100vh;
   overflow: hidden;
-  padding-left: var(--sidebar-width); /* reserve space for fixed sidebar */
+  padding-left: var(--sidebar-width); /* chừa chỗ cho thanh bên cố định */
 }
 
-/* Sidebar Navigation */
+/* Thanh điều hướng bên */
 .sidebar {
   width: var(--sidebar-width);
   background: var(--surface-strong);
@@ -271,7 +271,7 @@ textarea {
   text-overflow: ellipsis;
 }
 
-/* Header/Navbar */
+/* Đầu trang/Thanh điều hướng */
 .navbar {
   position: fixed;
   left: var(--sidebar-width);
@@ -382,7 +382,7 @@ textarea {
   display: none;
 }
 
-/* Hamburger animation to X */
+/* Hoạt ảnh hamburger thành X */
 .hamburger-btn.is-active .hamburger-line:nth-child(1) {
   transform: translateY(6px) rotate(45deg);
 }
@@ -396,9 +396,9 @@ textarea {
   transform: translateY(-6px) rotate(-45deg);
 }
 
-/* Main Content Area */
+/* Vùng nội dung chính */
 .app-content {
-  margin-left: 0; /* content offset handled by .app-wrapper padding */
+  margin-left: 0; /* độ lệch nội dung xử lý bởi padding .app-wrapper */
   margin-top: var(--navbar-height);
   flex: 1;
   overflow-y: auto;
@@ -442,7 +442,7 @@ textarea {
   flex-wrap: wrap;
 }
 
-/* Bottom Tab Bar (Mobile) */
+/* Thanh tab dưới (Di động) */
 .tab-bar {
   display: none;
   position: fixed;
@@ -490,7 +490,7 @@ textarea {
   font-size: 1.5rem;
 }
 
-/* Mobile Navigation */
+/* Điều hướng di động */
 .mobile-menu {
   display: none;
   position: fixed;
@@ -505,7 +505,7 @@ textarea {
   animation: backdropIn var(--transition) ease-out;
 }
 
-/* Hamburger Menu Button */
+/* Nút menu hamburger */
 .hamburger-btn {
   display: none;
   width: 42px;
@@ -536,7 +536,7 @@ textarea {
   transform-origin: center;
 }
 
-/* Responsive - Tablet & Mobile */
+/* Tương thích - Máy tính bảng & Di động */
 @media (max-width: 1024px) {
   .navbar-search {
     width: 200px;
@@ -630,7 +630,7 @@ textarea {
   }
 }
 
-/* Utilities */
+/* Tiện ích */
 .container {
   max-width: var(--container-max);
   width: var(--container-width);
@@ -662,7 +662,7 @@ textarea {
   overscroll-behavior: none;
 }
 
-/* Disable hover effects on touch devices */
+/* Tắt hiệu ứng di chuột trên thiết bị cảm ứng */
 @media (hover: none) and (pointer: coarse) {
   .btn:hover,
   .card:hover,

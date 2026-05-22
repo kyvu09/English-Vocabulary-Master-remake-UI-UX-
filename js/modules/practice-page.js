@@ -33,7 +33,8 @@ export async function render() {
         <h1 class="page-title">Luyện tập Quiz</h1>
         <p class="page-subtitle">Ôn luyện từ vựng qua các bài kiểm tra</p>
       </div>
-      <div id="practiceContent"></div>
+      <div id="practiceConfig"></div>
+      <div id="practiceQuizContent"></div>
     </div>
   `;
 }
@@ -58,7 +59,7 @@ export async function mount() {
   allMeanings = [...new Set(allWords.flatMap(w => w.meaning.split(/[;,/|]/).map(m => m.trim())))].filter(Boolean);
 
   if (!allWords.length) {
-    document.getElementById('practiceContent').innerHTML = `
+    document.getElementById('practiceConfig').innerHTML = `
       <div class="card" style="text-align:center; padding:48px;">
         <div style="color:var(--primary); margin-bottom:16px;"><i data-lucide="book-open" width="48" height="48"></i></div>
         <h3>Chưa có từ vựng</h3>
@@ -66,7 +67,8 @@ export async function mount() {
         <button class="btn btn-primary d-inline-flex align-items-center gap-2 justify-content-center" onclick="window.router?.navigateTo('vocabulary')" style="margin-top:16px;"><i data-lucide="plus" width="18" height="18"></i> Thêm từ vựng</button>
       </div>
     `;
-    if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceContent') });
+    document.getElementById('practiceQuizContent').innerHTML = '';
+    if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceConfig') });
     return;
   }
 
@@ -74,10 +76,29 @@ export async function mount() {
 }
 
 function showQuizConfig() {
-  document.getElementById('practiceContent').innerHTML = `
+  const modes = [
+    { value: 'quiz', label: 'Quiz Văn bản', icon: 'edit-3', desc: 'Trả lời câu hỏi dịch thuật', color: 'var(--primary)' },
+    { value: 'listening', label: 'Listening', icon: 'headphones', desc: 'Nghe và gõ lại tiếng Anh', color: '#7c3aed' },
+    { value: 'matchpairs', label: 'Match Pairs', icon: 'shuffle', desc: 'Ghép cặp từ Anh - Việt trong 90 giây', color: '#e11d48' }
+  ];
+
+  document.getElementById('practiceConfig').innerHTML = `
     <div class="card">
       <h2 class="m-0 mb-4 d-flex align-items-center gap-2"><i data-lucide="settings"></i> Cấu hình Quiz</h2>
-      
+
+      <label class="form-label fw-semibold mb-3">Chọn chế độ</label>
+      <div class="row g-3 mb-4" id="modeCardsContainer">
+        ${modes.map((m, i) => `
+          <div class="col-sm-4">
+            <div class="card h-100 mode-card ${i === 0 ? 'mode-card-selected' : ''}" data-mode="${m.value}" style="cursor:pointer; text-align:center; padding:20px 16px; border:2px solid ${i === 0 ? m.color : 'var(--border)'}; transition:all 0.25s ease;">
+              <div style="font-size:2rem; color:${m.color}; margin-bottom:8px;"><i data-lucide="${m.icon}" width="32" height="32"></i></div>
+              <h4 class="m-0 fs-6 fw-bold" style="color:${m.color};">${m.label}</h4>
+              <p class="text-muted small mt-1 mb-0" style="line-height:1.4;">${m.desc}</p>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
       <div class="row g-3 mb-4">
         <div class="col-sm-6">
           <label class="form-label fw-semibold">Loại dịch</label>
@@ -98,13 +119,6 @@ function showQuizConfig() {
           <label class="form-label fw-semibold">Số câu hỏi</label>
           <input id="wordCountInput" class="form-control" type="number" value="${Math.min(10, allWords.length)}" min="1" max="${allWords.length}" />
         </div>
-        <div class="col-sm-6">
-          <label class="form-label fw-semibold">Chế độ</label>
-          <select id="modeSelect" class="form-select">
-            <option value="quiz">Quiz Văn bản</option>
-            <option value="listening">Listening</option>
-          </select>
-        </div>
       </div>
 
       <div class="d-flex gap-2">
@@ -113,7 +127,21 @@ function showQuizConfig() {
       </div>
     </div>
   `;
-  if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceContent') });
+  document.getElementById('practiceQuizContent').innerHTML = '';
+  if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceConfig') });
+
+  // Mode card selection
+  document.querySelectorAll('.mode-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.mode-card').forEach(c => {
+        c.classList.remove('mode-card-selected');
+        c.style.borderColor = 'var(--border)';
+      });
+      card.classList.add('mode-card-selected');
+      const color = card.dataset.mode === 'quiz' ? 'var(--primary)' : card.dataset.mode === 'listening' ? '#7c3aed' : '#e11d48';
+      card.style.borderColor = color;
+    });
+  });
 
   document.getElementById('startQuizBtn').addEventListener('click', startQuiz);
   document.getElementById('cancelBtn').addEventListener('click', () => window.router?.navigateTo('dashboard'));
@@ -123,7 +151,7 @@ async function startQuiz() {
   const direction = document.getElementById('directionSelect').value;
   const sourceId = document.getElementById('sourceSelect').value;
   const wordCount = parseInt(document.getElementById('wordCountInput').value) || 10;
-  const mode = document.getElementById('modeSelect').value;
+  const mode = document.querySelector('.mode-card-selected')?.dataset?.mode || 'quiz';
 
   const selectedSession = sessions.find(s => s.id === sourceId);
   let words = sourceId === 'all'
@@ -153,6 +181,11 @@ async function startQuiz() {
   }
 
   questions = shuffle(questions);
+
+  if (mode === 'matchpairs') {
+    startMatchPairs(words);
+    return;
+  }
 
   quizState = {
     mode,
@@ -228,7 +261,7 @@ function renderQuestion() {
   html += `
     <div class="mb-3">
       <textarea id="answerInput" class="form-control" style="min-height:60px; resize:none;" placeholder="${isListening ? 'Gõ từ tiếng Anh bạn vừa nghe...' : (isEnVi ? 'Nhập từ/cụm tiếng Việt...' : 'Nhập từ tiếng Anh...')}"></textarea>
-      <div id="inputWarning" class="small text-danger mt-1" style="display:none;">⚠️ Hãy nhập câu trả lời trước khi kiểm tra.</div>
+      <div id="inputWarning" class="small text-danger mt-1" style="display:none;"><i data-lucide="alert-triangle" width="14" height="14"></i> Hãy nhập câu trả lời trước khi kiểm tra.</div>
     </div>
     <div class="d-flex gap-2">
       <button id="submitBtn" class="btn btn-primary flex-fill d-flex align-items-center justify-content-center gap-2"><i data-lucide="check-circle" width="18" height="18"></i> Kiểm tra</button>
@@ -237,8 +270,8 @@ function renderQuestion() {
     <div id="feedback"></div>
   `;
 
-  document.getElementById('practiceContent').innerHTML = html;
-  if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceContent') });
+  document.getElementById('practiceQuizContent').innerHTML = html;
+  if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceQuizContent') });
 
   document.getElementById('submitBtn').addEventListener('click', checkAnswer);
   document.getElementById('skipBtn').addEventListener('click', () => nextQuestion(null));
@@ -333,7 +366,7 @@ function showFeedback(type, title, msg) {
       <div style="font-weight:700; color:${textColor}; margin-bottom:6px;">${title}</div>
       <div style="color:${textColor}; font-size:0.95rem;">${msg}</div>
       <button id="nextBtn" class="btn btn-primary" style="width:100%; margin-top:12px;">
-        ${quizState.currentIndex === quizState.questions.length - 1 ? '🏁 Xem kết quả' : 'Câu tiếp theo →'}
+        ${quizState.currentIndex === quizState.questions.length - 1 ? '<i data-lucide="flag" width="16" height="16"></i> Xem kết quả' : 'Câu tiếp theo →'}
       </button>
     </div>
   `;
@@ -410,7 +443,7 @@ async function showResults() {
     }
   }
 
-  document.getElementById('practiceContent').innerHTML = `
+  document.getElementById('practiceQuizContent').innerHTML = `
     <div class="card text-center border-0">
       <div class="float-animate" style="font-size:4rem; margin-bottom:12px;">${emoji}</div>
       <h2 class="m-0">${percent >= 80 ? 'Xuất sắc!' : percent >= 60 ? 'Tốt lắm!' : percent >= 40 ? 'Cố gắng thêm!' : 'Cần ôn luyện!'}</h2>
@@ -420,12 +453,13 @@ async function showResults() {
       <div class="card text-start mb-4">
         <h3 class="m-0 mb-3">Chi tiết kết quả</h3>
         <div class="stagger-fade" style="max-height:280px; overflow-y:auto;">
-          ${quizState.answers.map(a => `
-            <div class="d-flex align-items-start gap-2 p-2 mb-2 rounded-3 ${a.correct ? 'bg-success-subtle' : 'bg-danger-subtle'}" style="border-left:4px solid ${a.correct ? 'var(--success)' : 'var(--danger)'};">
+          ${quizState.answers.map((a, index) => `
+            <div class="d-flex align-items-start gap-2 p-2 mb-2 rounded-3" style="background:var(--surface-soft); border-left:4px solid var(--border);">
+              <div class="text-muted small fw-bold" style="min-width:32px;">#${index + 1}</div>
               <div>
                 <div class="fw-bold small d-flex align-items-center gap-1">${a.correct ? '<i data-lucide="check" width="14" height="14"></i>' : '<i data-lucide="x" width="14" height="14"></i>'} ${a.english}</div>
-                <div class="small ${a.correct ? 'text-success-emphasis' : 'text-danger-emphasis'}">
-                  ${a.correct ? `✓ Đúng` : `❌ Sai - Đáp án: ${a.correctAnswers}`}
+                <div class="small">
+                  ${a.correct ? `<i data-lucide="check" width="14" height="14"></i> Đúng` : `<i data-lucide="x" width="14" height="14"></i> Sai - Đáp án: ${a.correctAnswers}`}
                 </div>
               </div>
             </div>
@@ -440,7 +474,7 @@ async function showResults() {
       </div>
     </div>
   `;
-  if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceContent') });
+  if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceQuizContent') });
 }
 
 function shuffle(arr) {
@@ -464,7 +498,243 @@ async function speakWord(word) {
   window.speechSynthesis.speak(u);
 }
 
+// ── Match Pairs ──────────────────────────────────────────────
+const MATCH_PAIRS_COUNT = 6;
+const MATCH_TIMER_SECONDS = 90;
+
+let matchState = null;
+
+function startMatchPairs(words) {
+  const allWords = shuffle([...words]);
+  const active = allWords.slice(0, MATCH_PAIRS_COUNT);
+  const pool = allWords.slice(MATCH_PAIRS_COUNT);
+
+  matchState = {
+    pool,
+    active,
+    timer: MATCH_TIMER_SECONDS,
+    matched: 0,
+    attempts: 0,
+    combo: 0,
+    maxCombo: 0,
+    score: 0,
+    selected: [],
+    locked: false,
+    intervalId: null,
+    finished: false
+  };
+
+  renderMatchBoard();
+  matchState.intervalId = setInterval(matchTick, 1000);
+}
+
+function matchTick() {
+  if (matchState.finished) return;
+  matchState.timer--;
+  updateMatchTimer();
+  if (matchState.timer <= 0) {
+    endMatchPairs();
+  }
+}
+
+function updateMatchTimer() {
+  const fill = document.getElementById('matchTimerFill');
+  const label = document.getElementById('matchTimerLabel');
+  if (fill) fill.style.width = `${(matchState.timer / MATCH_TIMER_SECONDS) * 100}%`;
+  if (label) label.textContent = `${matchState.timer}s`;
+}
+
+function renderMatchBoard() {
+  const active = matchState.active;
+
+  const leftTiles = shuffle(active.map(w => ({ id: w.id, text: getEnglish(w) })));
+  const rightTiles = shuffle(active.map(w => ({ id: w.id, text: w.meaning })));
+
+  const html = `
+    <div class="match-container">
+      <div class="match-header">
+        <h2 class="match-title"><i data-lucide="shuffle" width="22" height="22"></i> Match Pairs</h2>
+        <div class="match-stats-row">
+          <div class="match-badge badge-correct"><i data-lucide="check" width="14" height="14"></i> <span id="matchStatsMatched">${matchState.matched}</span></div>
+          <div class="match-badge badge-timer" id="matchComboBadge"><i data-lucide="zap" width="14" height="14"></i> <span id="matchCombo">${matchState.combo}</span></div>
+          <div class="match-badge badge-timer" id="matchTimerLabel">${matchState.timer}s</div>
+        </div>
+      </div>
+      <div class="match-timer-bar">
+        <div id="matchTimerFill" class="match-timer-fill" style="width:${(matchState.timer / MATCH_TIMER_SECONDS) * 100}%"></div>
+      </div>
+      <div class="match-board">
+        <div class="match-column">
+          <div class="match-column-title">English</div>
+          ${leftTiles.map(t => `
+            <button class="match-tile" data-pair="${t.id}" data-side="left">${t.text}</button>
+          `).join('')}
+        </div>
+        <div class="match-column">
+          <div class="match-column-title">Tiếng Việt</div>
+          ${rightTiles.map(t => `
+            <button class="match-tile" data-pair="${t.id}" data-side="right">${t.text}</button>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('practiceQuizContent').innerHTML = html;
+  if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceQuizContent') });
+
+  document.querySelectorAll('.match-tile').forEach(el => {
+    el.addEventListener('click', () => onMatchTileClick(el));
+  });
+}
+
+function onMatchTileClick(el) {
+  if (matchState.finished || matchState.locked) return;
+  if (el.classList.contains('selected') || el.classList.contains('matched')) return;
+
+  const side = el.dataset.side;
+
+  if (matchState.selected.length === 1) {
+    const first = matchState.selected[0];
+    if (first.dataset.side === side) {
+      first.classList.remove('selected');
+      matchState.selected = [];
+    }
+  }
+
+  el.classList.add('selected');
+  matchState.selected.push(el);
+
+  if (matchState.selected.length === 2) {
+    matchState.locked = true;
+    checkMatchPair();
+  }
+}
+
+function checkMatchPair() {
+  const [a, b] = matchState.selected;
+  const match = a.dataset.pair === b.dataset.pair;
+
+  matchState.attempts++;
+
+  if (match) {
+    matchState.matched++;
+    matchState.combo++;
+    if (matchState.combo > matchState.maxCombo) matchState.maxCombo = matchState.combo;
+    const points = 100 + (matchState.combo - 1) * 50;
+    matchState.score += points;
+
+    a.classList.remove('selected');
+    b.classList.remove('selected');
+    a.classList.add('match-correct');
+    b.classList.add('match-correct');
+
+    document.getElementById('matchStatsMatched').textContent = matchState.matched;
+    const comboEl = document.getElementById('matchCombo');
+    if (comboEl) comboEl.textContent = matchState.combo;
+    if (window.lucide) lucide.createIcons({ root: document.querySelector('.match-header') });
+
+    setTimeout(removeAndSpawnPair, 600);
+  } else {
+    matchState.combo = 0;
+    const comboEl = document.getElementById('matchCombo');
+    if (comboEl) comboEl.textContent = '0';
+
+    a.classList.add('wrong');
+    b.classList.add('wrong');
+
+    setTimeout(() => {
+      a.classList.remove('selected', 'wrong');
+      b.classList.remove('selected', 'wrong');
+      matchState.selected = [];
+      matchState.locked = false;
+    }, 500);
+  }
+}
+
+function removeAndSpawnPair() {
+  if (matchState.finished) return;
+
+  const matchedTiles = document.querySelectorAll('.match-tile.match-correct');
+  if (matchedTiles.length < 2) return;
+
+  const pairId = matchedTiles[0].dataset.pair;
+  const idx = matchState.active.findIndex(w => w.id === pairId);
+  if (idx !== -1) matchState.active.splice(idx, 1);
+
+  if (matchState.pool.length > 0) {
+    matchState.active.push(matchState.pool.shift());
+  }
+
+  matchState.selected = [];
+  matchState.locked = false;
+
+  if (matchState.active.length === 0) {
+    endMatchPairs();
+  } else {
+    renderMatchBoard();
+  }
+}
+
+function endMatchPairs() {
+  matchState.finished = true;
+  if (matchState.intervalId) {
+    clearInterval(matchState.intervalId);
+    matchState.intervalId = null;
+  }
+
+  const attempts = matchState.attempts || 1;
+  const accuracy = Math.round((matchState.matched / attempts) * 100);
+
+  let emojiIcon = 'trophy';
+  let title = 'Xuất sắc!';
+  if (accuracy < 50) { emojiIcon = 'book-open'; title = 'Cần luyện thêm!'; }
+  else if (accuracy < 75) { emojiIcon = 'thumbs-up'; title = 'Khá tốt!'; }
+
+  document.getElementById('practiceQuizContent').innerHTML = `
+    <div class="match-result-overlay">
+      <div class="card text-center border-0 result-card">
+        <div class="float-animate" style="color:var(--text); margin-bottom:12px;">
+          <i data-lucide="${emojiIcon}" width="64" height="64"></i>
+        </div>
+        <h2 class="m-0">${title}</h2>
+        <p class="text-muted mb-4">Kết quả Match Pairs</p>
+
+        <div class="match-stats-grid">
+          <div class="match-stat">
+            <div class="match-stat-value text-primary">${matchState.matched}</div>
+            <div class="match-stat-label">Cặp đã ghép</div>
+          </div>
+          <div class="match-stat">
+            <div class="match-stat-value text-success">${accuracy}%</div>
+            <div class="match-stat-label">Độ chính xác</div>
+          </div>
+          <div class="match-stat">
+            <div class="match-stat-value text-warning">${matchState.maxCombo}</div>
+            <div class="match-stat-label">Combo cao nhất</div>
+          </div>
+          <div class="match-stat">
+            <div class="match-stat-value text-danger">${matchState.score}</div>
+            <div class="match-stat-label">Điểm số</div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-center flex-wrap" style="margin-top:24px;">
+          <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" onclick="location.reload()"><i data-lucide="rotate-ccw" width="18" height="18"></i> Làm lại</button>
+          <button class="btn btn-primary d-inline-flex align-items-center gap-1" onclick="window.router?.navigateTo('dashboard')"><i data-lucide="home" width="18" height="18"></i> Trang chủ</button>
+        </div>
+      </div>
+    </div>
+  `;
+  if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceQuizContent') });
+}
+
 export function unmount() {
+  if (matchState?.intervalId) {
+    clearInterval(matchState.intervalId);
+    matchState.intervalId = null;
+  }
   window.speechSynthesis?.cancel();
   quizState = null;
+  matchState = null;
 }

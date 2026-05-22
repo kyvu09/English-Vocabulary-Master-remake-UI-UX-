@@ -202,18 +202,22 @@ async function lookupWord() {
 
   document.getElementById('modalMeaning').value = result;
 
-  statusEl.style.background = 'var(--success-bg)';
-  statusEl.style.color = 'var(--success)';
-  statusEl.textContent = '✅ Dịch thành công!';
-
+  statusEl.style.background = 'var(--surface-soft)';
+  statusEl.className = 'small mt-1';
+  statusEl.innerHTML = '<i data-lucide="check-circle" width="14" height="14"></i> Dịch thành công!';
+  if (window.lucide) lucide.createIcons({ root: statusEl });
+  statusEl.style.display = 'block';
+  
   setTimeout(() => {
     statusEl.style.display = 'none';
   }, 1500);
 
 } catch (err) {
-  statusEl.style.background = 'var(--danger-bg)';
-  statusEl.style.color = 'var(--danger)';
-  statusEl.textContent = `❌ Lỗi: ${err.message}`;
+  statusEl.style.background = 'var(--surface-soft)';
+  statusEl.className = 'small mt-1';
+  statusEl.innerHTML = `<i data-lucide="x-circle" width="14" height="14"></i> Lỗi: ${err.message}`;
+  if (window.lucide) lucide.createIcons({ root: statusEl });
+  statusEl.style.display = 'block';
 }
 }
 

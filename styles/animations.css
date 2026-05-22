@@ -1,6 +1,6 @@
-/* Enhanced Animations & Transitions */
+/* Hoạt ảnh & Chuyển tiếp nâng cao */
 
-/* Page Transitions */
+/* Chuyển tiếp trang */
 @keyframes pageEnter {
   from {
     opacity: 0;
@@ -23,7 +23,7 @@
   }
 }
 
-/* Fade Animations */
+/* Hoạt ảnh mờ dần */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -56,7 +56,7 @@
   }
 }
 
-/* Slide Animations */
+/* Hoạt ảnh trượt */
 @keyframes slideInRight {
   from {
     opacity: 0;
@@ -79,7 +79,7 @@
   }
 }
 
-/* Stagger Animation for Lists */
+/* Hoạt ảnh so le cho danh sách */
 @keyframes staggerFadeIn {
   from {
     opacity: 0;
@@ -91,7 +91,7 @@
   }
 }
 
-/* Scale Animation */
+/* Hoạt ảnh phóng to/thu nhỏ */
 @keyframes scaleIn {
   from {
     opacity: 0;
@@ -103,34 +103,34 @@
   }
 }
 
-/* Float Animation */
+/* Hoạt ảnh nổi */
 @keyframes float {
   0% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-15px) scale(1.05); }
   100% { transform: translateY(0) scale(1); }
 }
 
-/* Skeleton Pulse Loading */
+/* Hiệu ứng xương tải */
 @keyframes skeletonPulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
 
-/* Shake Animation (for errors) */
+/* Hoạt ảnh rung (khi lỗi) */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-4px); }
   75% { transform: translateX(4px); }
 }
 
-/* Success Bounce */
+/* Nảy khi thành công */
 @keyframes successBounce {
   0% { transform: scale(0.8); }
   50% { transform: scale(1.1); }
   100% { transform: scale(1); }
 }
 
-/* Confetti Pop */
+/* Hiệu ứng confetti */
 @keyframes confettiPop {
   0% {
     opacity: 1;
@@ -142,19 +142,19 @@
   }
 }
 
-/* Loading Spinner */
+/* Vòng xoay tải */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-/* Pulse Animation */
+/* Hoạt ảnh nhấp nháy */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
 }
 
-/* Tooltip Show */
+/* Hiển thị chú thích */
 @keyframes tooltipShow {
   from {
     opacity: 0;
@@ -166,13 +166,13 @@
   }
 }
 
-/* Modal Backdrop */
+/* Nền modal */
 @keyframes backdropIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-/* Application Classes */
+/* Lớp ứng dụng */
 .animate-enter {
   animation: pageEnter var(--transition-slow) ease-out forwards;
 }
@@ -209,7 +209,7 @@
   animation: spin 1s linear infinite;
 }
 
-/* Stagger children animations */
+/* Hoạt ảnh so le cho phần tử con */
 .stagger-container > * {
   animation: staggerFadeIn var(--transition) ease-out both;
 }
@@ -221,7 +221,7 @@
 .stagger-container > *:nth-child(5) { animation-delay: 200ms; }
 .stagger-container > *:nth-child(n+6) { animation-delay: 250ms; }
 
-/* Loading Skeleton */
+/* Khung xương tải */
 .skeleton {
   background: linear-gradient(
     90deg,
@@ -233,7 +233,7 @@
   animation: skeletonPulse 1.5s ease-in-out infinite;
 }
 
-/* Smooth Transitions */
+/* Chuyển tiếp mượt */
 .transition-all {
   transition: all var(--transition);
 }
@@ -250,7 +250,7 @@
   transition: opacity var(--transition);
 }
 
-/* Reduced motion accessibility */
+/* Giảm chuyển động - tiếp cận */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

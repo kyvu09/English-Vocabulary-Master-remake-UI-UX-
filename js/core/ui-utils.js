@@ -2,8 +2,13 @@ export function showToast(message, type = 'success') {
   const container = document.getElementById('toastContainer');
   if (!container) return;
 
-  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
-  const icon = icons[type] || 'ℹ️';
+  const icons = { 
+    success: '<i data-lucide="check-circle" width="18" height="18"></i>', 
+    error: '<i data-lucide="x-circle" width="18" height="18"></i>', 
+    info: '<i data-lucide="info" width="18" height="18"></i>', 
+    warning: '<i data-lucide="alert-triangle" width="18" height="18"></i>' 
+  };
+  const icon = icons[type] || '<i data-lucide="info" width="18" height="18"></i>';
 
   const toastEl = document.createElement('div');
   toastEl.className = `toast toast-${type} align-items-center border-0`;
@@ -13,13 +18,14 @@ export function showToast(message, type = 'success') {
   toastEl.innerHTML = `
     <div class="d-flex">
       <div class="toast-body d-flex align-items-center gap-2">
-        <span style="font-size:1.2rem;">${icon}</span>
+        <span class="d-flex align-items-center">${icon}</span>
         <span>${message}</span>
       </div>
       <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
     </div>
   `;
   container.appendChild(toastEl);
+  if (window.lucide) lucide.createIcons({ root: toastEl });
 
   const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
   toast.show();

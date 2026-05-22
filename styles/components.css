@@ -1,6 +1,6 @@
-/* Component Styles - Buttons, Cards, Forms, etc. */
+/* Kiểu thành phần - Nút, Thẻ, Biểu mẫu, v.v. */
 
-/* ============ BUTTONS ============ */
+/* ============ NÚT BẤM ============ */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -118,7 +118,7 @@
   width: 100%;
 }
 
-/* Button Groups */
+/* Nhóm nút */
 .btn-group {
   display: flex;
   gap: var(--space-sm);
@@ -129,7 +129,7 @@
   flex-direction: column;
 }
 
-/* ============ CARDS ============ */
+/* ============ THẺ ============ */
 .card {
   background: var(--surface-strong);
   border: 1px solid var(--line);
@@ -217,7 +217,7 @@
   color: var(--danger);
 }
 
-/* ============ FORMS ============ */
+/* ============ BIỂU MẪU ============ */
 .form-group {
   margin-bottom: var(--space-2xl);
   width: 100%;
@@ -333,7 +333,7 @@
   margin-top: var(--space-sm);
 }
 
-/* Form Layout */
+/* Bố cục biểu mẫu */
 .form-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -344,7 +344,7 @@
   grid-template-columns: 1fr;
 }
 
-/* ============ BADGES & CHIPS ============ */
+/* ============ HUY HIỆU & THẺ NHỎ ============ */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -423,7 +423,7 @@
   gap: var(--space-lg);
 }
 
-/* ============ ALERTS & STATUS ============ */
+/* ============ CẢNH BÁO & TRẠNG THÁI ============ */
 .alert {
   padding: var(--space-lg) var(--space-xl);
   border-radius: var(--radius-sm);
@@ -513,7 +513,7 @@
   border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
-/* ============ TABLES ============ */
+/* ============ BẢNG ============ */
 .table-wrap {
   width: 100%;
   max-height: 600px;
@@ -574,7 +574,7 @@ tbody tr:last-child td {
   opacity: 0.5;
 }
 
-/* ============ MODALS (delegated to Bootstrap) ============ */
+/* ============ CỬA SỔ (ủy quyền cho Bootstrap) ============ */
 
 .modal-card {
   width: min(600px, 100%);
@@ -675,7 +675,7 @@ tbody tr:last-child td {
   margin-top: var(--space-lg);
 }
 
-/* Account Logout Section */
+/* Phần đăng xuất tài khoản */
 .account-logout-section {
   margin-top: var(--space-xl);
   
@@ -720,7 +720,7 @@ tbody tr:last-child td {
   flex-shrink: 0;
 }
 
-/* Sidebar Overlay */
+/* Lớp phủ thanh bên */
 .sidebar-overlay {
   position: fixed;
   inset: 0;
@@ -737,7 +737,7 @@ tbody tr:last-child td {
   visibility: visible;
 }
 
-/* ============ PROGRESS BAR ============ */
+/* ============ THANH TIẾN TRÌNH ============ */
 .progress {
   width: 100%;
   height: 8px;
@@ -770,7 +770,7 @@ tbody tr:last-child td {
   color: var(--muted);
 }
 
-/* ============ RESPONSIVE ============ */
+/* ============ TƯƠNG THÍCH ============ */
 @media (max-width: 600px) {
   .card {
     padding: var(--space-xl) var(--space-lg);
@@ -820,7 +820,7 @@ tbody tr:last-child td {
   }
 }
 
-/* ============ CUSTOM DIALOGS ============ */
+/* ============ HỘP THOẠI TÙY CHỈNH ============ */
 .custom-dialog-overlay {
   position: fixed;
   inset: 0;

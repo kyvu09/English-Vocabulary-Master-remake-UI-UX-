@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --bg: #f4f7fb;
   --surface: rgba(255, 255, 255, 0.92);
   --surface-strong: #ffffff;
@@ -20,6 +20,29 @@
   --shadow-soft: 0 10px 24px rgba(15, 23, 42, 0.06);
   --radius: 22px;
   --radius-sm: 14px;
+}
+
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --surface: rgba(30, 41, 59, 0.85);
+  --surface-strong: #1e293b;
+  --surface-soft: #1a2332;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --line: #334155;
+  --line-soft: #1e293b;
+  --primary-soft: #1e3a5f;
+  --success-bg: #14532d;
+  --warning-bg: #422006;
+  --danger-bg: #450a0a;
+  --shadow: 0 18px 45px rgba(0, 0, 0, 0.3);
+  --shadow-soft: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .btn-google {
+  color: var(--text);
+  border-color: var(--line);
+  background: var(--surface-strong);
 }
 
 * {
@@ -348,8 +371,8 @@ textarea {
    margin-left: auto;
     padding: 15px 5%;
   background: var(--surface-strong);
-  color: #111827;
-  border: 1px solid #d1d5db;
+  color: var(--text);
+  border: 1px solid var(--line);
 }
 
 .status {
@@ -962,5 +985,267 @@ tbody tr:last-child td {
 
   table {
     min-width: 400px;
+  }
+}
+
+/* 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+   Match Pairs Game
+   鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?*/
+
+.match-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.match-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.match-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.match-stats-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.match-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+}
+
+.match-badge svg {
+  width: 14px;
+  height: 14px;
+}
+
+.match-badge.badge-correct {
+  border-color: #99f7ba;
+  background: var(--success-bg);
+  font-variant-numeric: tabular-nums;
+}
+
+.match-badge.badge-wrong {
+  border-color: #fecaca;
+  background: var(--danger-bg);
+}
+
+.match-badge.badge-timer {
+  border-color: #88baf7;
+   background-color: var(--primary-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.match-timer-bar {
+  width: 100%;
+  height: 7px;
+  background: var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+
+.match-timer-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--primary-2));
+  border-radius: 999px;
+  transition: width 1s linear;
+}
+
+.match-timer-fill.danger {
+  background: linear-gradient(90deg, var(--danger), #f87171);
+}
+
+.match-board {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.match-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.match-column-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-align: center;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--line-soft);
+  margin-bottom: 2px;
+}
+
+.match-tile {
+  padding: 13px 14px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  background: var(--surface-strong);
+  cursor: pointer;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  transition: all 0.18s ease;
+  user-select: none;
+  word-break: break-word;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+}
+
+.match-tile:hover:not(.matched):not(.match-correct):not([disabled]) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.1);
+}
+
+.match-tile.selected {
+  border-color: var(--primary);
+  background: #dbeafe;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+  transform: scale(1.02);
+}
+
+.match-tile.match-correct {
+  border-color: #86efac;
+  background: var(--success-bg);
+  color: var(--success);
+  pointer-events: none;
+  animation: matchCorrectPop 0.45s ease forwards;
+}
+
+.match-tile.wrong {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+  color: var(--danger);
+  animation: matchShake 0.4s ease;
+}
+
+.match-tile.matched {
+  opacity: 0.4;
+  pointer-events: none;
+  transform: scale(0.95);
+}
+
+@keyframes matchShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+@keyframes matchCorrectPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.08); }
+  100% { transform: scale(0.96); opacity: 0.5; }
+}
+
+.match-hint {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-top: 16px;
+}
+
+/* Match Pairs vs divider - hidden on mobile for space */
+.match-vs {
+  display: none;
+}
+
+/* Result */
+.match-result-overlay {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.match-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.match-stat {
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 8px;
+  text-align: center;
+}
+
+.match-stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.match-stat-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.match-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.match-pairs-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+@media (max-width: 600px) {
+  .match-board {
+    gap: 8px;
+  }
+
+  .match-tile {
+    padding: 10px 10px;
+    font-size: 0.82rem;
+    min-height: 42px;
+    border-radius: 10px;
+  }
+
+  .match-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .match-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 }
