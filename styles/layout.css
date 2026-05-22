@@ -552,6 +552,7 @@ textarea {
     transform: translateX(-100%);
     width: 280px;
     box-shadow: none;
+     padding-bottom: calc(45px + env(safe-area-inset-bottom, 20px));
   }
 
   .sidebar.show {

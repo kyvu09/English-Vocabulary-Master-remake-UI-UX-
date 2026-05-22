@@ -651,7 +651,7 @@ tbody tr:last-child td {
   gap: var(--space-xl);
   padding: var(--space-xl);
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--primary-soft), #f0f9ff);
+  background: var(--primary-soft);
   margin-bottom: var(--space-2xl);
 }
 
@@ -678,6 +678,7 @@ tbody tr:last-child td {
 /* Account Logout Section */
 .account-logout-section {
   margin-top: var(--space-xl);
+  
 }
 
 .account-logout-divider {
@@ -687,7 +688,7 @@ tbody tr:last-child td {
 }
 
 .account-logout-btn {
-  display: flex;
+  text-align: center ;
   align-items: center;
   gap: var(--space-md);
   width: 100%;
@@ -703,10 +704,11 @@ tbody tr:last-child td {
 }
 
 .account-logout-btn:hover {
+ 
   background: var(--danger);
   color: #fff;
   border-color: var(--danger);
-  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.25);
+  box-shadow: 0 8px 20px rgba(146, 31, 31, 0.25);
   transform: translateY(-1px);
 }
 

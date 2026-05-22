@@ -336,13 +336,19 @@ function toggleTheme() {
   const newTheme = isDark ? "light" : "dark";
   html.setAttribute("data-theme", newTheme);
   localStorage.setItem("app-theme", newTheme);
+  updateThemeUI(newTheme);
+}
+
+function updateThemeUI(theme) {
+  const icon = document.getElementById('themeIcon');
+  if (icon) icon.textContent = theme === 'dark' ? '🌙' : '☀️';
 }
 
 function initTheme() {
   const saved = localStorage.getItem("app-theme");
-  if (saved === "dark") {
-    document.documentElement.setAttribute("data-theme", "dark");
-  }
+  const theme = saved === "dark" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", theme);
+  updateThemeUI(theme);
 }
 
 function startRouterOnce() {

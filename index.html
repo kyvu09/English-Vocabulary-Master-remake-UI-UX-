@@ -50,13 +50,16 @@
           <span>Kết quả</span>
         </button>
         <button class="nav-item" type="button" data-page="themes">
-          <span class="nav-icon">🎨</span>
-          <span>Chủ đề</span>
+          <span class="nav-icon" id="themeIcon">☀️</span>
+          <span style="flex:1">Chủ đề</span>
+          <span class="theme-switch" id="themeSwitch">
+            <span class="theme-switch-slider" id="themeSlider"></span>
+          </span>
         </button>
       </div>
 
       <div class="sidebar-footer">
-        <button class="user-profile" id="userProfile" type="button" aria-label="Mở tài khoản người dùng">
+        <button class="user-profile" id="userProfile" type="button" aria-label="Quản lý tài khoản">
           <div class="user-avatar" id="userAvatar">
             <img id="userAvatarImage" alt="Ảnh đại diện" hidden />
             <span id="userInitial">U</span>
@@ -126,13 +129,13 @@
         <div class="p-4">
           <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
             <div>
-              <h2 class="modal-title fs-4 fw-bold m-0">Tài khoản người dùng</h2>
-              <p class="text-muted small mt-1 mb-0">Cập nhật hồ sơ, ảnh đại diện và yêu cầu email đổi mật khẩu.</p>
+              <h2 class="modal-title fs-4 fw-bold m-0">Quản lý tài khoản</h2>
+              <p class="text-muted small mt-1 mb-0">thông tin hồ sơ</p>
             </div>
             <button class="btn-close" id="accountModalCloseBtn" type="button" aria-label="Đóng"></button>
           </div>
 
-          <div class="d-flex align-items-center gap-3 p-3 rounded-4 mb-4" style="background: linear-gradient(135deg, var(--primary-soft), #f0f9ff);">
+          <div class="d-flex align-items-center gap-3 p-3 rounded-4 mb-4" style="background: var(--primary-soft);">
             <div class="user-avatar account-avatar-preview" id="accountAvatar" style="width:68px;height:68px;font-size:1.5rem;">
               <img id="accountAvatarImage" alt="Xem trước ảnh đại diện" hidden />
               <span id="accountAvatarInitial">U</span>
