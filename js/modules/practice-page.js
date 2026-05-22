@@ -60,7 +60,7 @@ export async function mount() {
 
   if (!allWords.length) {
     document.getElementById('practiceConfig').innerHTML = `
-      <div class="card" style="text-align:center; padding:48px;">
+      <div class="card animate-enter" style="text-align:center; padding:48px;">
         <div style="color:var(--primary); margin-bottom:16px;"><i data-lucide="book-open" width="48" height="48"></i></div>
         <h3>Chưa có từ vựng</h3>
         <p>Vui lòng thêm từ vựng trước khi luyện tập</p>
@@ -83,14 +83,14 @@ function showQuizConfig() {
   ];
 
   document.getElementById('practiceConfig').innerHTML = `
-    <div class="card">
+    <div class="card animate-enter">
       <h2 class="m-0 mb-4 d-flex align-items-center gap-2"><i data-lucide="settings"></i> Cấu hình Quiz</h2>
 
       <label class="form-label fw-semibold mb-3">Chọn chế độ</label>
       <div class="row g-3 mb-4" id="modeCardsContainer">
         ${modes.map((m, i) => `
           <div class="col-sm-4">
-            <div class="card h-100 mode-card ${i === 0 ? 'mode-card-selected' : ''}" data-mode="${m.value}" style="cursor:pointer; text-align:center; padding:20px 16px; border:2px solid ${i === 0 ? m.color : 'var(--border)'}; transition:all 0.25s ease;">
+            <div class="card h-100 mode-card ${i === 0 ? 'mode-card-selected' : ''}" data-mode="${m.value}" style="cursor:pointer; text-align:center; padding:20px 16px; border:2px solid ${i === 0 ? m.color : 'var(--border)'};">
               <div style="font-size:2rem; color:${m.color}; margin-bottom:8px;"><i data-lucide="${m.icon}" width="32" height="32"></i></div>
               <h4 class="m-0 fs-6 fw-bold" style="color:${m.color};">${m.label}</h4>
               <p class="text-muted small mt-1 mb-0" style="line-height:1.4;">${m.desc}</p>
@@ -130,17 +130,17 @@ function showQuizConfig() {
   document.getElementById('practiceQuizContent').innerHTML = '';
   if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceConfig') });
 
-  // Mode card selection
-  document.querySelectorAll('.mode-card').forEach(card => {
-    card.addEventListener('click', () => {
-      document.querySelectorAll('.mode-card').forEach(c => {
-        c.classList.remove('mode-card-selected');
-        c.style.borderColor = 'var(--border)';
-      });
-      card.classList.add('mode-card-selected');
-      const color = card.dataset.mode === 'quiz' ? 'var(--primary)' : card.dataset.mode === 'listening' ? '#7c3aed' : '#e11d48';
-      card.style.borderColor = color;
+  // Mode card selection – use event delegation so clicks on child elements work
+  const modeColors = { quiz: 'var(--primary)', listening: '#7c3aed', matchpairs: '#e11d48' };
+  document.getElementById('modeCardsContainer').addEventListener('click', (e) => {
+    const card = e.target.closest('.mode-card');
+    if (!card) return;
+    document.querySelectorAll('.mode-card').forEach(c => {
+      c.classList.remove('mode-card-selected');
+      c.style.borderColor = 'var(--border)';
     });
+    card.classList.add('mode-card-selected');
+    card.style.borderColor = modeColors[card.dataset.mode] || 'var(--primary)';
   });
 
   document.getElementById('startQuizBtn').addEventListener('click', startQuiz);
@@ -181,6 +181,8 @@ async function startQuiz() {
   }
 
   questions = shuffle(questions);
+
+  document.getElementById('practiceConfig').style.display = 'none';
 
   if (mode === 'matchpairs') {
     startMatchPairs(words);
@@ -235,7 +237,7 @@ function renderQuestion() {
        ${!isEnVi ? '' : `<div style="font-size:0.9rem; color:var(--muted);">Loại từ: <strong>${PART_OF_SPEECH[q.partOfSpeech] || q.partOfSpeech}</strong></div>`}`;
 
   let html = `
-    <div class="card">
+    <div class="card animate-enter">
       <div class="d-flex justify-content-between align-items-center mb-2">
         <span class="text-muted small">Câu ${quizState.currentIndex + 1}/${quizState.questions.length}</span>
         <span class="badge bg-success-subtle text-success-emphasis d-inline-flex align-items-center gap-1"><i data-lucide="check" width="12" height="12"></i> ${quizState.score} đúng</span>
@@ -444,7 +446,7 @@ async function showResults() {
   }
 
   document.getElementById('practiceQuizContent').innerHTML = `
-    <div class="card text-center border-0">
+    <div class="card text-center border-0 animate-enter">
       <div class="float-animate" style="font-size:4rem; margin-bottom:12px;">${emoji}</div>
       <h2 class="m-0">${percent >= 80 ? 'Xuất sắc!' : percent >= 60 ? 'Tốt lắm!' : percent >= 40 ? 'Cố gắng thêm!' : 'Cần ôn luyện!'}</h2>
       <div class="stat-count" style="font-size:3rem; margin:16px 0;">${correct}/${total}</div>
@@ -551,7 +553,7 @@ function renderMatchBoard() {
   const rightTiles = shuffle(active.map(w => ({ id: w.id, text: w.meaning })));
 
   const html = `
-    <div class="match-container">
+    <div class="match-container animate-enter">
       <div class="match-header">
         <h2 class="match-title"><i data-lucide="shuffle" width="22" height="22"></i> Match Pairs</h2>
         <div class="match-stats-row">
@@ -692,7 +694,7 @@ function endMatchPairs() {
   else if (accuracy < 75) { emojiIcon = 'thumbs-up'; title = 'Khá tốt!'; }
 
   document.getElementById('practiceQuizContent').innerHTML = `
-    <div class="match-result-overlay">
+    <div class="match-result-overlay animate-enter">
       <div class="card text-center border-0 result-card">
         <div class="float-animate" style="color:var(--text); margin-bottom:12px;">
           <i data-lucide="${emojiIcon}" width="64" height="64"></i>
@@ -737,4 +739,9 @@ export function unmount() {
   window.speechSynthesis?.cancel();
   quizState = null;
   matchState = null;
+
+  const config = document.getElementById('practiceConfig');
+  if (config) config.style.display = 'block';
+  const content = document.getElementById('practiceQuizContent');
+  if (content) content.innerHTML = '';
 }

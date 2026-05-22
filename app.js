@@ -335,6 +335,7 @@ function toggleTheme() {
   const isDark = html.getAttribute("data-theme") === "dark";
   const newTheme = isDark ? "light" : "dark";
   html.setAttribute("data-theme", newTheme);
+  html.setAttribute("data-bs-theme", newTheme);
   localStorage.setItem("app-theme", newTheme);
   updateThemeUI(newTheme);
 }
@@ -353,6 +354,7 @@ function initTheme() {
   const saved = localStorage.getItem("app-theme");
   const theme = saved === "dark" ? "dark" : "light";
   document.documentElement.setAttribute("data-theme", theme);
+  document.documentElement.setAttribute("data-bs-theme", theme);
   updateThemeUI(theme);
 }
 
