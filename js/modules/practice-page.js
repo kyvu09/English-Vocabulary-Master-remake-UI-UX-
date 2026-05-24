@@ -19,7 +19,7 @@ let quizState = null;
 let allMeanings = [];
 let sessionFilter = null;
 let defaultSourceId = 'all';
-let selectedMode = 'quiz';
+let selectedMode = null;
 
 function getEnglish(word = {}) {
   return word.english || word.englishWord || '';
@@ -90,9 +90,9 @@ function showQuizConfig() {
 
       <label class="form-label fw-semibold mb-3">Chọn chế độ</label>
       <div class="row g-3 mb-4" id="modeCardsContainer">
-        ${modes.map((m, i) => `
+        ${modes.map((m) => `
           <div class="col-sm-4">
-            <div class="card h-100 mode-card ${i === 0 ? 'mode-card-selected' : ''}" data-mode="${m.value}" style="cursor:pointer; text-align:center; padding:20px 16px; border:2px solid ${i === 0 ? m.color : 'var(--line)'}; opacity: ${i === 0 ? '1' : '0.85'}; transition: all var(--transition-fast);">
+            <div class="card h-100 mode-card" data-mode="${m.value}" style="cursor:pointer; text-align:center; padding:20px 16px; border:2px solid var(--line); opacity: 0.85; transition: all var(--transition-fast);">
               <div style="font-size:2rem; color:${m.color}; margin-bottom:8px;"><i data-lucide="${m.icon}" width="32" height="32"></i></div>
               <h4 class="m-0 fs-6 fw-bold" style="color:${m.color};">${m.label}</h4>
               <p class="text-muted small mt-1 mb-0" style="line-height:1.4;">${m.desc}</p>
@@ -101,39 +101,42 @@ function showQuizConfig() {
         `).join('')}
       </div>
 
-      <div class="row g-3 mb-4">
-        <div class="col-sm-6">
-          <label class="form-label fw-semibold">Loại dịch</label>
-          <select id="directionSelect" class="form-select">
-            <option value="both">Ngẫu nhiên</option>
-            <option value="en-vi">English → Tiếng Việt</option>
-            <option value="vi-en">Tiếng Việt → English</option>
-          </select>
+      <!-- Phần cấu hình các tùy chọn (Loại dịch, Nguồn từ, Số câu hỏi và Bắt đầu) sẽ ẩn ban đầu -->
+      <div id="quizOptionsContainer" style="display: none;" class="animate-enter">
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6" id="directionSelectContainer">
+            <label class="form-label fw-semibold">Loại dịch</label>
+            <select id="directionSelect" class="form-select">
+              <option value="both">Ngẫu nhiên</option>
+              <option value="en-vi">English → Tiếng Việt</option>
+              <option value="vi-en">Tiếng Việt → English</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label fw-semibold">Nguồn từ</label>
+            <select id="sourceSelect" class="form-select">
+              <option value="all" ${defaultSourceId === 'all' ? 'selected' : ''}>Tất cả từ vựng (${allWords.length})</option>
+              ${sessions.map(s => `<option value="${s.id}" ${defaultSourceId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label fw-semibold">Số câu hỏi</label>
+            <input id="wordCountInput" class="form-control" type="number" value="${Math.min(10, allWords.length)}" min="1" max="${allWords.length}" />
+          </div>
         </div>
-        <div class="col-sm-6">
-          <label class="form-label fw-semibold">Nguồn từ</label>
-          <select id="sourceSelect" class="form-select">
-            <option value="all" ${defaultSourceId === 'all' ? 'selected' : ''}>Tất cả từ vựng (${allWords.length})</option>
-            ${sessions.map(s => `<option value="${s.id}" ${defaultSourceId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
-          </select>
-        </div>
-        <div class="col-sm-6">
-          <label class="form-label fw-semibold">Số câu hỏi</label>
-          <input id="wordCountInput" class="form-control" type="number" value="${Math.min(10, allWords.length)}" min="1" max="${allWords.length}" />
-        </div>
-      </div>
 
-      <div class="d-flex gap-2">
-        <button id="startQuizBtn" class="btn btn-primary flex-fill d-flex align-items-center justify-content-center gap-2"><i data-lucide="play" width="18" height="18"></i> Bắt đầu Quiz</button>
-        <button id="cancelBtn" class="btn btn-outline-secondary">Hủy</button>
+        <div class="d-flex gap-2">
+          <button id="startQuizBtn" class="btn btn-primary flex-fill d-flex align-items-center justify-content-center gap-2"><i data-lucide="play" width="18" height="18"></i> Bắt đầu Quiz</button>
+          <button id="cancelBtn" class="btn btn-outline-secondary">Hủy</button>
+        </div>
       </div>
     </div>
   `;
   document.getElementById('practiceQuizContent').innerHTML = '';
   if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceConfig') });
 
-  // Mode card selection – use event delegation so clicks on child elements work
-  selectedMode = 'quiz'; // Reset to default each time config is shown
+  // Reset về chưa chọn khi tải cấu hình
+  selectedMode = null;
   const modeColors = { quiz: '#2563eb', listening: '#7c3aed', matchpairs: '#e11d48' };
   document.getElementById('modeCardsContainer').addEventListener('click', (e) => {
     const card = e.target.closest('.mode-card');
@@ -151,13 +154,33 @@ function showQuizConfig() {
     card.classList.add('mode-card-selected');
     card.style.borderColor = modeColors[newMode] || '#2563eb';
     card.style.opacity = '1';
+
+    // Hiện container tùy chọn và điều chỉnh các input cho phù hợp từng chế độ
+    const optionsContainer = document.getElementById('quizOptionsContainer');
+    const directionContainer = document.getElementById('directionSelectContainer');
+    if (optionsContainer) {
+      optionsContainer.style.display = 'block';
+    }
+    if (directionContainer) {
+      if (newMode === 'quiz') {
+        directionContainer.style.display = 'block';
+      } else {
+        // Listening & Match Pairs không cần cấu hình Loại dịch
+        directionContainer.style.display = 'none';
+      }
+    }
   });
 
   document.getElementById('startQuizBtn').addEventListener('click', startQuiz);
   document.getElementById('cancelBtn').addEventListener('click', () => window.router?.navigateTo('dashboard'));
 }
 
+
 async function startQuiz() {
+  if (!selectedMode) {
+    await showAlert('Vui lòng chọn chế độ để bắt đầu', 'Thông báo');
+    return;
+  }
   const direction = document.getElementById('directionSelect').value;
   const sourceId = document.getElementById('sourceSelect').value;
   const wordCount = parseInt(document.getElementById('wordCountInput').value) || 10;
@@ -508,7 +531,7 @@ async function speakWord(word) {
 }
 
 // ── Match Pairs ──────────────────────────────────────────────
-const MATCH_PAIRS_COUNT = 6;
+const MATCH_PAIRS_COUNT = 7;
 const MATCH_TIMER_SECONDS = 90;
 
 let matchState = null;

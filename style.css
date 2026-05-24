@@ -1130,7 +1130,7 @@ tbody tr:last-child td {
 
 .match-tile.selected {
   border-color: var(--primary);
-  background: #dbeafe;
+   background: var(--primary-soft);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
   transform: scale(1.02);
 }

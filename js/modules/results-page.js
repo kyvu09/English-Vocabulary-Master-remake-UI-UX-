@@ -141,10 +141,11 @@ function loadHistory() {
   const user = auth.currentUser;
   if (!user) return;
 
+  // Lấy danh sách tối đa 10 lượt làm gần nhất
   const q = query(
     collection(db, 'users', user.uid, 'quizAttempts'),
     orderBy('createdAt', 'desc'),
-    limit(50)
+    limit(10)
   );
 
   unsubscribers.push(onSnapshot(q, snapshot => {
@@ -169,7 +170,7 @@ function loadHistory() {
             <th class="small text-muted text-uppercase">Ngày làm</th>
             <th class="small text-muted text-uppercase">Loại</th>
             <th class="small text-muted text-uppercase">Chiều dịch</th>
-            <th class="small text-muted text-uppercase">Số câu</th>
+            <th class="small text-muted text-uppercase">Số câu/Cặp</th>
             <th class="small text-muted text-uppercase">Đúng</th>
             <th class="small text-muted text-uppercase">Điểm</th>
           </tr>
@@ -184,12 +185,22 @@ function loadHistory() {
             const scoreBadge = scorePercent >= 80 ? 'success' : scorePercent >= 60 ? 'warning' : 'danger';
             const direction = d.direction || d.directionMode;
             const directionLabel = direction === 'en-vi' ? 'EN → VI' : direction === 'vi-en' ? 'VI → EN' : '<i data-lucide="arrow-left-right" width="14" height="14"></i> Cả hai';
-            const modeIcon = d.mode === 'listening' ? '<i data-lucide="headphones" width="14" height="14"></i>' : '<i data-lucide="file-text" width="14" height="14"></i>';
+            
+            // Xác định icon và nhãn hiển thị tương ứng với từng chế độ
+            let modeIcon = '<i data-lucide="file-text" width="14" height="14"></i>';
+            let modeLabel = 'Quiz';
+            if (d.mode === 'listening') {
+              modeIcon = '<i data-lucide="headphones" width="14" height="14"></i>';
+              modeLabel = 'Listening';
+            } else if (d.mode === 'matchpairs') {
+              modeIcon = '<i data-lucide="shuffle" width="14" height="14"></i>';
+              modeLabel = 'Match Pairs';
+            }
 
             return `
               <tr>
                 <td class="small">${date.toLocaleString('vi-VN')}</td>
-                <td><span class="badge bg-primary-subtle text-primary-emphasis d-inline-flex align-items-center gap-1">${modeIcon} ${d.mode === 'listening' ? 'Listening' : 'Quiz'}</span></td>
+                <td><span class="badge bg-primary-subtle text-primary-emphasis d-inline-flex align-items-center gap-1">${modeIcon} ${modeLabel}</span></td>
                 <td>${directionLabel}</td>
                 <td>${totalQuestions}</td>
                 <td class="fw-semibold">${correctAnswers}/${totalQuestions}</td>
