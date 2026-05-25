@@ -3,7 +3,8 @@ import {
   db,
   firebaseReady,
   ensureUserProfile,
-  LOGIN_PAGE
+  LOGIN_PAGE,
+  updateUserTotalPoints
 } from "./firebase-config.js";
 import {
   onAuthStateChanged,
@@ -17,6 +18,7 @@ import * as vocabularyPage from "./js/modules/vocabulary-page.js";
 import * as sessionsPage from "./js/modules/sessions-page.js";
 import * as practicePage from "./js/modules/practice-page.js";
 import * as resultsPage from "./js/modules/results-page.js";
+import * as leaderboardPage from "./js/modules/leaderboard-page.js";
 
 import { showAlert } from "./js/core/ui-utils.js";
 
@@ -55,6 +57,7 @@ router.registerPage("vocabulary", vocabularyPage);
 router.registerPage("sessions", sessionsPage);
 router.registerPage("practice", practicePage);
 router.registerPage("results", resultsPage);
+router.registerPage("leaderboard", leaderboardPage);
 
 function redirectToLogin() {
   window.location.replace(LOGIN_PAGE);
@@ -384,8 +387,9 @@ function init() {
 
     try {
       await ensureUserProfile(user);
+      await updateUserTotalPoints(user.uid);
     } catch (error) {
-      console.error("ensureUserProfile failed", error);
+      console.error("ensureUserProfile/updateUserTotalPoints failed", error);
     }
 
     updateUserUI(auth.currentUser);

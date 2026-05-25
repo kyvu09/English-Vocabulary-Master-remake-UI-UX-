@@ -1,5 +1,5 @@
 // Module Trang Luyện tập (Practice Page) - Hỗ trợ Quiz hai chiều, thống kê chi tiết, luyện nghe
-import { auth, db } from '../../firebase-config.js';
+import { auth, db, updateUserTotalPoints } from '../../firebase-config.js';
 import { 
   collection, query, orderBy, getDocs, doc, 
   serverTimestamp, writeBatch
@@ -570,6 +570,11 @@ async function showResults() {
 
       await batch.commit();
       await enforceQuizHistoryLimit(user.uid);
+      try {
+        await updateUserTotalPoints(user.uid);
+      } catch (err) {
+        console.error('Lỗi khi cập nhật điểm rank:', err);
+      }
     } catch (err) {
       console.error('Save error:', err);
     }
@@ -976,7 +981,7 @@ async function enforceQuizHistoryLimit(userId) {
 }
 
 // Lưu lịch sử chế độ Match Pairs vào Firestore
-async function saveMatchPairsAttempt(userId, total, correct, percent) {
+async function saveMatchPairsAttempt(userId, total, correct, percent, points, maxCombo) {
   try {
     const batch = writeBatch(db);
     const attemptRef = doc(collection(db, 'users', userId, 'quizAttempts'));
@@ -986,10 +991,17 @@ async function saveMatchPairsAttempt(userId, total, correct, percent) {
       totalQuestions: total,
       correctAnswers: correct,
       scorePercent: percent,
+      points: points || 0,
+      maxCombo: maxCombo || 0,
       createdAt: serverTimestamp()
     });
     await batch.commit();
     await enforceQuizHistoryLimit(userId);
+    try {
+      await updateUserTotalPoints(userId);
+    } catch (err) {
+      console.error('Lỗi khi cập nhật điểm rank:', err);
+    }
   } catch (err) {
     console.error('Lỗi khi lưu kết quả ghép cặp:', err);
   }
@@ -1007,7 +1019,7 @@ function endMatchPairs() {
 
   const user = auth.currentUser;
   if (user) {
-    saveMatchPairsAttempt(user.uid, totalPairs, matchState.matched, accuracy);
+    saveMatchPairsAttempt(user.uid, totalPairs, matchState.matched, accuracy, matchState.score, matchState.maxCombo);
   }
 
   let emojiIcon = 'trophy';
