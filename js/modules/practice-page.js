@@ -222,6 +222,8 @@ async function startQuiz() {
     return;
   }
 
+  const initialTime = 5*questions.length + (questions.length * 12); // Thời gian cơ bản + thêm theo số câu hỏi
+
   quizState = {
     mode,
     direction,
@@ -231,11 +233,15 @@ async function startQuiz() {
     points: 0,
     combo: 0,
     maxCombo: 0,
+    timer: initialTime,
+    initialTime: initialTime,
+    intervalId: null,
     answers: [],
     finished: false
   };
 
   renderQuestion();
+  quizState.intervalId = setInterval(quizTick, 1000);
 }
 
 function resolveSessionFilterId() {
@@ -273,7 +279,7 @@ function renderQuestion() {
        ${!isEnVi ? '' : `<div style="font-size:0.9rem; color:var(--muted);">Loại từ: <strong>${PART_OF_SPEECH[q.partOfSpeech] || q.partOfSpeech}</strong></div>`}`;
 
   let scoreBadgeHtml = '';
-  if (quizState.mode === 'listening') {
+  if (quizState.mode === 'quiz' || quizState.mode === 'listening') {
     scoreBadgeHtml = `
       <div class="d-flex gap-2 align-items-center flex-wrap">
         <span class="badge bg-success-subtle text-success-emphasis d-inline-flex align-items-center gap-1"><i data-lucide="check" width="12" height="12"></i> ${quizState.score} đúng</span>
@@ -291,10 +297,13 @@ function renderQuestion() {
     <div class="card animate-enter">
       <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
         <span class="text-muted small">Câu ${quizState.currentIndex + 1}/${quizState.questions.length}</span>
-        ${scoreBadgeHtml}
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+          <span id="quizTimerLabel" class="badge bg-primary-subtle text-primary fw-bold" style="font-size:0.85rem; font-variant-numeric:tabular-nums; display:inline-flex; align-items:center; gap:4px;"><i data-lucide="timer" width="14" height="14"></i>${Math.max(0, quizState.timer).toFixed(1)}s</span>
+          ${scoreBadgeHtml}
+        </div>
       </div>
-      <div class="progress-gradient mb-4">
-        <div class="progress-bar" style="width:${progress}%;"></div>
+      <div class="match-timer-bar" style="margin-bottom: 20px;">
+        <div id="quizTimerFill" class="match-timer-fill" style="width:${Math.min(100, Math.max(0, (quizState.timer / quizState.initialTime) * 100))}%"></div>
       </div>
 
       <div class="practice-card text-center mb-4">
@@ -318,7 +327,6 @@ function renderQuestion() {
     </div>
     <div class="d-flex gap-2">
       <button id="submitBtn" class="btn btn-primary flex-fill d-flex align-items-center justify-content-center gap-2"><i data-lucide="check-circle" width="18" height="18"></i> Kiểm tra</button>
-      <button id="skipBtn" class="btn btn-outline-secondary flex-fill d-flex align-items-center justify-content-center gap-2"><i data-lucide="skip-forward" width="18" height="18"></i> Bỏ qua</button>
     </div>
     <div id="feedback"></div>
   `;
@@ -327,7 +335,6 @@ function renderQuestion() {
   if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceQuizContent') });
 
   document.getElementById('submitBtn').addEventListener('click', checkAnswer);
-  document.getElementById('skipBtn').addEventListener('click', () => nextQuestion(null));
   document.getElementById('speakBtn')?.addEventListener('click', () => speakWord(getEnglish(q)));
 
   if (isListening) {
@@ -342,6 +349,7 @@ function checkAnswer() {
   const userAnswer = normalizeText(document.getElementById('answerInput').value);
   const isEnVi = q.direction === 'en-vi';
   const isListening = quizState.mode === 'listening';
+  const isGamified = quizState.mode === 'quiz' || quizState.mode === 'listening';
 
   if (!userAnswer) {
     // Hiển thị cảnh báo trực tiếp mà không vô hiệu hóa đầu vào để người dùng vẫn có thể tiếp tục nhập liệu
@@ -370,17 +378,30 @@ function checkAnswer() {
 
   if (correct) {
     quizState.score++;
-    if (isListening) {
+    if (isGamified) {
       quizState.combo++;
       if (quizState.combo > quizState.maxCombo) {
         quizState.maxCombo = quizState.combo;
       }
-      const points = 100 + (quizState.combo - 1) * 50;
+      const points = 5 + (quizState.combo - 1) * 2;
       quizState.points += points;
+
+      // Add time for correct answer (+0.3s)
+      quizState.timer += 0.3;
+      updateQuizTimer();
     }
   } else {
-    if (isListening) {
+    if (isGamified) {
       quizState.combo = 0;
+
+      // Subtract time for wrong answer (-0.7s)
+      quizState.timer -= 0.7;
+      if (quizState.timer < 0) quizState.timer = 0;
+      updateQuizTimer();
+      if (quizState.timer <= 0) {
+        endQuiz();
+        return;
+      }
     }
   }
 
@@ -395,9 +416,9 @@ function checkAnswer() {
   });
 
   let title = correct ? '<i data-lucide="check-circle" width="16" height="16"></i> Chính xác!' : '<i data-lucide="x-circle" width="16" height="16"></i> Sai rồi!';
-  if (isListening) {
+  if (isGamified) {
     if (correct) {
-      const points = 100 + (quizState.combo - 1) * 50;
+      const points = 5 + (quizState.combo - 1) * 2;
       title += ` <span class="badge bg-warning text-dark ms-2" style="font-size:0.8rem; vertical-align:middle;">+${points}đ (Combo x${quizState.combo})</span>`;
     } else {
       title += ` <span class="badge bg-danger text-white ms-2" style="font-size:0.8rem; vertical-align:middle;">Mất combo</span>`;
@@ -426,7 +447,7 @@ function showFeedback(type, title, msg) {
   
   answerInput.disabled = true;
   submitBtn.disabled = true;
-  skipBtn.disabled = true;
+  if (skipBtn) skipBtn.disabled = true;
 
   const borderColor = type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--warning)';
   const bgColor = type === 'success' ? 'var(--success-bg)' : type === 'error' ? 'var(--danger-bg)' : 'var(--warning-bg)';
@@ -457,10 +478,44 @@ function nextQuestion(answer) {
   }
 }
 
+function quizTick() {
+  if (!quizState || quizState.finished) return;
+  quizState.timer--;
+  updateQuizTimer();
+  if (quizState.timer <= 0) {
+    endQuiz();
+  }
+}
+
+function updateQuizTimer() {
+  const fill = document.getElementById('quizTimerFill');
+  const label = document.getElementById('quizTimerLabel');
+  if (fill) fill.style.width = `${Math.min(100, Math.max(0, (quizState.timer / quizState.initialTime) * 100))}%`;
+  if (label) label.textContent = `${Math.max(0, quizState.timer).toFixed(1)}s`;
+}
+
+function endQuiz() {
+  if (!quizState) return;
+  quizState.finished = true;
+  if (quizState.intervalId) {
+    clearInterval(quizState.intervalId);
+    quizState.intervalId = null;
+  }
+  showResults();
+}
+
 async function showResults() {
+  if (quizState && quizState.intervalId) {
+    clearInterval(quizState.intervalId);
+    quizState.intervalId = null;
+  }
+  if (quizState) {
+    quizState.finished = true;
+  }
+
   const total = quizState.answers.length;
   const correct = quizState.answers.filter(a => a.correct).length;
-  const percent = Math.round((correct / total) * 100);
+  const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
   const emoji = percent >= 80 ? '<i data-lucide="award" width="64" height="64"></i>' : percent >= 60 ? '<i data-lucide="thumbs-up" width="64" height="64"></i>' : percent >= 40 ? '<i data-lucide="minus" width="64" height="64"></i>' : '<i data-lucide="frown" width="64" height="64"></i>';
 
   // Lưu kết quả vào Firestore bằng cơ chế Write Batch
@@ -480,7 +535,7 @@ async function showResults() {
         answers: quizState.answers,
         createdAt: serverTimestamp()
       };
-      if (quizState.mode === 'listening') {
+      if (quizState.mode === 'quiz' || quizState.mode === 'listening') {
         attemptData.points = quizState.points || 0;
         attemptData.maxCombo = quizState.maxCombo || 0;
       }
@@ -521,7 +576,7 @@ async function showResults() {
   }
 
   let scoreDisplayHtml = '';
-  if (quizState.mode === 'listening') {
+  if (quizState.mode === 'quiz' || quizState.mode === 'listening') {
     scoreDisplayHtml = `
       <div class="match-stats-grid mb-4">
         <div class="match-stat">
@@ -747,7 +802,7 @@ function checkMatchPair() {
     matchState.matched++;
     matchState.combo++;
     if (matchState.combo > matchState.maxCombo) matchState.maxCombo = matchState.combo;
-    const points = 100 + (matchState.combo - 1) * 50;
+    const points = 5 + (matchState.combo - 1) * 2;
     matchState.score += points;
 
     matchState.timer += 0.3;
@@ -1000,6 +1055,10 @@ function endMatchPairs() {
 
 // Giải phóng bộ nhớ và dừng âm thanh khi rời trang (unmount)
 export function unmount() {
+  if (quizState?.intervalId) {
+    clearInterval(quizState.intervalId);
+    quizState.intervalId = null;
+  }
   if (matchState?.intervalId) {
     clearInterval(matchState.intervalId);
     matchState.intervalId = null;
