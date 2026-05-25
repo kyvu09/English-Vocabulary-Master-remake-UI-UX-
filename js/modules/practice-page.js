@@ -228,6 +228,9 @@ async function startQuiz() {
     questions,
     currentIndex: 0,
     score: 0,
+    points: 0,
+    combo: 0,
+    maxCombo: 0,
     answers: [],
     finished: false
   };
@@ -269,11 +272,26 @@ function renderQuestion() {
     : `<div style="font-size:2rem; font-weight:700; color:var(--primary); margin-bottom:16px;">${prompt}</div>
        ${!isEnVi ? '' : `<div style="font-size:0.9rem; color:var(--muted);">Loại từ: <strong>${PART_OF_SPEECH[q.partOfSpeech] || q.partOfSpeech}</strong></div>`}`;
 
+  let scoreBadgeHtml = '';
+  if (quizState.mode === 'listening') {
+    scoreBadgeHtml = `
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <span class="badge bg-success-subtle text-success-emphasis d-inline-flex align-items-center gap-1"><i data-lucide="check" width="12" height="12"></i> ${quizState.score} đúng</span>
+        <span class="badge bg-warning-subtle text-warning-emphasis d-inline-flex align-items-center gap-1"><i data-lucide="zap" width="12" height="12"></i> x${quizState.combo}</span>
+        <span class="badge bg-danger-subtle text-danger-emphasis d-inline-flex align-items-center gap-1"><i data-lucide="award" width="12" height="12"></i> ${quizState.points}đ</span>
+      </div>
+    `;
+  } else {
+    scoreBadgeHtml = `
+      <span class="badge bg-success-subtle text-success-emphasis d-inline-flex align-items-center gap-1"><i data-lucide="check" width="12" height="12"></i> ${quizState.score} đúng</span>
+    `;
+  }
+
   let html = `
     <div class="card animate-enter">
-      <div class="d-flex justify-content-between align-items-center mb-2">
+      <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
         <span class="text-muted small">Câu ${quizState.currentIndex + 1}/${quizState.questions.length}</span>
-        <span class="badge bg-success-subtle text-success-emphasis d-inline-flex align-items-center gap-1"><i data-lucide="check" width="12" height="12"></i> ${quizState.score} đúng</span>
+        ${scoreBadgeHtml}
       </div>
       <div class="progress-gradient mb-4">
         <div class="progress-bar" style="width:${progress}%;"></div>
@@ -350,7 +368,21 @@ function checkAnswer() {
 
   const correct = acceptedAnswers.includes(userAnswer);
 
-  if (correct) quizState.score++;
+  if (correct) {
+    quizState.score++;
+    if (isListening) {
+      quizState.combo++;
+      if (quizState.combo > quizState.maxCombo) {
+        quizState.maxCombo = quizState.combo;
+      }
+      const points = 100 + (quizState.combo - 1) * 50;
+      quizState.points += points;
+    }
+  } else {
+    if (isListening) {
+      quizState.combo = 0;
+    }
+  }
 
   quizState.answers.push({
     wordId: q.id,
@@ -362,7 +394,15 @@ function checkAnswer() {
     correctAnswers: isListening ? getEnglish(q) : acceptedAnswers.map(a => denormalizeText(a, isEnVi)).join(' / ')
   });
 
-  const title = correct ? '<i data-lucide="check-circle" width="16" height="16"></i> Chính xác!' : '<i data-lucide="x-circle" width="16" height="16"></i> Sai rồi!';
+  let title = correct ? '<i data-lucide="check-circle" width="16" height="16"></i> Chính xác!' : '<i data-lucide="x-circle" width="16" height="16"></i> Sai rồi!';
+  if (isListening) {
+    if (correct) {
+      const points = 100 + (quizState.combo - 1) * 50;
+      title += ` <span class="badge bg-warning text-dark ms-2" style="font-size:0.8rem; vertical-align:middle;">+${points}đ (Combo x${quizState.combo})</span>`;
+    } else {
+      title += ` <span class="badge bg-danger text-white ms-2" style="font-size:0.8rem; vertical-align:middle;">Mất combo</span>`;
+    }
+  }
 
   // Luôn hiển thị từ tiếng Anh và nghĩa đầy đủ sau khi kiểm tra xong (listening & quiz)
   const msg = correct
@@ -431,7 +471,7 @@ async function showResults() {
       
       // Lưu thông tin lượt làm quiz
       const attemptRef = doc(collection(db, 'users', user.uid, 'quizAttempts'));
-      batch.set(attemptRef, {
+      const attemptData = {
         direction: quizState.direction,
         mode: quizState.mode,
         totalQuestions: total,
@@ -439,7 +479,12 @@ async function showResults() {
         scorePercent: percent,
         answers: quizState.answers,
         createdAt: serverTimestamp()
-      });
+      };
+      if (quizState.mode === 'listening') {
+        attemptData.points = quizState.points || 0;
+        attemptData.maxCombo = quizState.maxCombo || 0;
+      }
+      batch.set(attemptRef, attemptData);
 
       // Cập nhật số liệu thống kê chi tiết của từng từ vựng
       const statsByWord = new Map();
@@ -475,12 +520,40 @@ async function showResults() {
     }
   }
 
+  let scoreDisplayHtml = '';
+  if (quizState.mode === 'listening') {
+    scoreDisplayHtml = `
+      <div class="match-stats-grid mb-4">
+        <div class="match-stat">
+          <div class="match-stat-value text-primary">${correct}/${total}</div>
+          <div class="match-stat-label">Số câu đúng</div>
+        </div>
+        <div class="match-stat">
+          <div class="match-stat-value text-success">${percent}%</div>
+          <div class="match-stat-label">Chính xác</div>
+        </div>
+        <div class="match-stat">
+          <div class="match-stat-value text-warning">${quizState.maxCombo || 0}</div>
+          <div class="match-stat-label">Combo cao nhất</div>
+        </div>
+        <div class="match-stat">
+          <div class="match-stat-value text-danger">${quizState.points || 0}</div>
+          <div class="match-stat-label">Điểm số</div>
+        </div>
+      </div>
+    `;
+  } else {
+    scoreDisplayHtml = `
+      <div class="stat-count" style="font-size:3rem; margin:16px 0;">${correct}/${total}</div>
+      <div class="text-muted mb-4 fs-5">${percent}% chính xác</div>
+    `;
+  }
+
   document.getElementById('practiceQuizContent').innerHTML = `
     <div class="card text-center border-0 animate-enter">
       <div class="float-animate" style="font-size:4rem; margin-bottom:12px;">${emoji}</div>
-      <h2 class="m-0">${percent >= 80 ? 'Xuất sắc!' : percent >= 60 ? 'Tốt lắm!' : percent >= 40 ? 'Cố gắng thêm!' : 'Cần ôn luyện!'}</h2>
-      <div class="stat-count" style="font-size:3rem; margin:16px 0;">${correct}/${total}</div>
-      <div class="text-muted mb-4 fs-5">${percent}% chính xác</div>
+      <h2 class="m-0 mb-3">${percent >= 80 ? 'Xuất sắc!' : percent >= 60 ? 'Tốt lắm!' : percent >= 40 ? 'Cố gắng thêm!' : 'Cần ôn luyện!'}</h2>
+      ${scoreDisplayHtml}
 
       <div class="card text-start mb-4">
         <h3 class="m-0 mb-3">Chi tiết kết quả</h3>
