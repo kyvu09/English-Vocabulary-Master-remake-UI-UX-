@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg: #f4f7fb;
   --surface: rgba(255, 255, 255, 0.92);
   --surface-strong: #ffffff;
@@ -1151,9 +1151,13 @@ tbody tr:last-child td {
 }
 
 .match-tile.matched {
-  opacity: 0.4;
+  opacity: 0.3 !important;
   pointer-events: none;
-  transform: scale(0.95);
+  transform: scale(0.96);
+  border-color: transparent !important;
+  background: var(--surface-soft) !important;
+  color: var(--muted) !important;
+  box-shadow: none !important;
 }
 
 @keyframes matchShake {
@@ -1265,4 +1269,18 @@ tbody tr:last-child td {
 .mode-card-selected {
   transform: scale(1.02);
   box-shadow: var(--shadow);
+}
+
+@keyframes matchTileSpawn {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-spawn-tile {
+  animation: matchTileSpawn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }

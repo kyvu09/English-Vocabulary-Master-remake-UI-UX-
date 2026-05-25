@@ -531,7 +531,7 @@ async function speakWord(word) {
 }
 
 // ── Match Pairs ──────────────────────────────────────────────
-const MATCH_PAIRS_COUNT = 7;
+const MATCH_PAIRS_COUNT = 6;
 const MATCH_TIMER_SECONDS = 90;
 
 let matchState = null;
@@ -541,9 +541,14 @@ function startMatchPairs(words) {
   const active = allWords.slice(0, MATCH_PAIRS_COUNT);
   const pool = allWords.slice(MATCH_PAIRS_COUNT);
 
+  // Tạo và trộn riêng hai cột ban đầu (chỉ trộn duy nhất 1 lần khi bắt đầu)
+  const leftTiles = shuffle(active.map(w => ({ id: w.id, text: getEnglish(w), state: 'active' })));
+  const rightTiles = shuffle(active.map(w => ({ id: w.id, text: w.meaning, state: 'active' })));
+
   matchState = {
     pool,
-    active,
+    leftTiles,
+    rightTiles,
     timer: MATCH_TIMER_SECONDS,
     matched: 0,
     attempts: 0,
@@ -551,12 +556,13 @@ function startMatchPairs(words) {
     maxCombo: 0,
     score: 0,
     selected: [],
+    pendingMatches: [], // Bộ đệm lưu các cặp ghép đúng chờ thay thế (đủ 2 cặp mới đổi)
     locked: false,
     intervalId: null,
     finished: false
   };
 
-  renderMatchBoard();
+  renderMatchBoard(true); // Tham số true biểu thị lượt render đầu tiên
   matchState.intervalId = setInterval(matchTick, 1000);
 }
 
@@ -576,12 +582,23 @@ function updateMatchTimer() {
   if (label) label.textContent = `${matchState.timer}s`;
 }
 
-function renderMatchBoard() {
-  const active = matchState.active;
+function renderTileHTML(t, index, side, isFirstRender) {
+  if (t.state === 'empty') {
+    return `<div class="match-tile-empty" style="height: 52px; margin-bottom: 8px; opacity: 0; pointer-events: none;"></div>`;
+  }
 
-  const leftTiles = shuffle(active.map(w => ({ id: w.id, text: getEnglish(w) })));
-  const rightTiles = shuffle(active.map(w => ({ id: w.id, text: w.meaning })));
+  // Thêm class matched để tạo hiệu ứng ẩn mờ nếu thẻ đã được ghép đúng
+  const matchedClass = t.state === 'matched' ? 'matched' : '';
+  const animClass = t.state === 'spawning' ? 'animate-spawn-tile' : (isFirstRender ? 'animate-spawn-tile' : '');
+  
+  return `
+    <button class="match-tile ${matchedClass} ${animClass}" data-pair="${t.id}" data-side="${side}" data-index="${index}" style="margin-bottom: 8px;" ${t.state === 'matched' ? 'disabled' : ''}>
+      ${t.text}
+    </button>
+  `;
+}
 
+function renderMatchBoard(isFirstRender = false) {
   const html = `
     <div class="match-container animate-enter">
       <div class="match-header">
@@ -598,15 +615,11 @@ function renderMatchBoard() {
       <div class="match-board">
         <div class="match-column">
           <div class="match-column-title">English</div>
-          ${leftTiles.map(t => `
-            <button class="match-tile" data-pair="${t.id}" data-side="left">${t.text}</button>
-          `).join('')}
+          ${matchState.leftTiles.map((t, idx) => renderTileHTML(t, idx, 'left', isFirstRender)).join('')}
         </div>
         <div class="match-column">
           <div class="match-column-title">Tiếng Việt</div>
-          ${rightTiles.map(t => `
-            <button class="match-tile" data-pair="${t.id}" data-side="right">${t.text}</button>
-          `).join('')}
+          ${matchState.rightTiles.map((t, idx) => renderTileHTML(t, idx, 'right', isFirstRender)).join('')}
         </div>
       </div>
     </div>
@@ -618,11 +631,15 @@ function renderMatchBoard() {
   document.querySelectorAll('.match-tile').forEach(el => {
     el.addEventListener('click', () => onMatchTileClick(el));
   });
+
+  // Sau khi hiển thị, đổi tất cả trạng thái 'spawning' về 'active' để tránh chạy lại animation
+  matchState.leftTiles.forEach(t => { if (t.state === 'spawning') t.state = 'active'; });
+  matchState.rightTiles.forEach(t => { if (t.state === 'spawning') t.state = 'active'; });
 }
 
 function onMatchTileClick(el) {
   if (matchState.finished || matchState.locked) return;
-  if (el.classList.contains('selected') || el.classList.contains('matched')) return;
+  if (el.classList.contains('selected') || el.classList.contains('matched') || el.classList.contains('match-correct')) return;
 
   const side = el.dataset.side;
 
@@ -631,6 +648,7 @@ function onMatchTileClick(el) {
     if (first.dataset.side === side) {
       first.classList.remove('selected');
       matchState.selected = [];
+      return;
     }
   }
 
@@ -656,6 +674,7 @@ function checkMatchPair() {
     const points = 100 + (matchState.combo - 1) * 50;
     matchState.score += points;
 
+    // Trước tiên áp dụng class match-correct để tạo hiệu ứng nhấp nháy xanh lá (pop) cực đẹp
     a.classList.remove('selected');
     b.classList.remove('selected');
     a.classList.add('match-correct');
@@ -666,7 +685,48 @@ function checkMatchPair() {
     if (comboEl) comboEl.textContent = matchState.combo;
     if (window.lucide) lucide.createIcons({ root: document.querySelector('.match-header') });
 
-    setTimeout(removeAndSpawnPair, 600);
+    // Xác định chỉ số slot của 2 thẻ vừa được ghép đúng
+    const leftEl = a.dataset.side === 'left' ? a : b;
+    const rightEl = a.dataset.side === 'right' ? a : b;
+    const leftIdx = parseInt(leftEl.dataset.index);
+    const rightIdx = parseInt(rightEl.dataset.index);
+
+    // Cập nhật trạng thái trong bộ nhớ thành 'matched' (để giữ ẩn mờ khi vẽ lại bảng)
+    matchState.leftTiles[leftIdx].state = 'matched';
+    matchState.rightTiles[rightIdx].state = 'matched';
+
+    // Lưu cặp chỉ số vừa ghép đúng vào bộ đệm pendingMatches
+    matchState.pendingMatches.push({ leftIdx, rightIdx });
+
+    // Sau khi hiệu ứng nhấp nháy xanh lá (pop) chạy được 400ms, chuyển sang trạng thái ẩn mờ (matched)
+    setTimeout(() => {
+      a.classList.remove('match-correct');
+      b.classList.remove('match-correct');
+      a.classList.add('matched');
+      b.classList.add('matched');
+      a.disabled = true;
+      b.disabled = true;
+    }, 400);
+
+    // Giải phóng trạng thái lựa chọn để người dùng có thể thao tác tiếp cặp thứ 2 ngay lập tức
+    matchState.selected = [];
+    matchState.locked = false;
+
+    // Nếu đã ghép đúng đủ 2 cặp, tiến hành thay thế và tự trộn lẫn nhau
+    if (matchState.pendingMatches.length === 2) {
+      matchState.locked = true; // Khóa bảng tạm thời để thực hiện thay thế
+      setTimeout(() => {
+        replacePendingPairs();
+      }, 600);
+    } else {
+      // Trường hợp đặc biệt: không còn thẻ hoạt động nào trên bảng và pool rỗng (kết thúc game)
+      const activeCount = matchState.leftTiles.filter(t => t.state === 'active' || t.state === 'spawning').length;
+      if (activeCount === 0) {
+        setTimeout(() => {
+          endMatchPairs();
+        }, 600);
+      }
+    }
   } else {
     matchState.combo = 0;
     const comboEl = document.getElementById('matchCombo');
@@ -684,24 +744,70 @@ function checkMatchPair() {
   }
 }
 
-function removeAndSpawnPair() {
+function replacePendingPairs() {
   if (matchState.finished) return;
 
-  const matchedTiles = document.querySelectorAll('.match-tile.match-correct');
-  if (matchedTiles.length < 2) return;
+  const [pair1, pair2] = matchState.pendingMatches;
+  const leftIdx1 = pair1.leftIdx;
+  const rightIdx1 = pair1.rightIdx;
+  const leftIdx2 = pair2.leftIdx;
+  const rightIdx2 = pair2.rightIdx;
 
-  const pairId = matchedTiles[0].dataset.pair;
-  const idx = matchState.active.findIndex(w => w.id === pairId);
-  if (idx !== -1) matchState.active.splice(idx, 1);
+  if (matchState.pool.length >= 2) {
+    const wordA = matchState.pool.shift();
+    const wordB = matchState.pool.shift();
 
-  if (matchState.pool.length > 0) {
-    matchState.active.push(matchState.pool.shift());
+    // Tự trộn lẫn nhau giữa 2 thẻ mới nạp trước khi đưa vào slot cũ cột trái
+    const leftValues = shuffle([
+      { id: wordA.id, text: getEnglish(wordA), state: 'spawning' },
+      { id: wordB.id, text: getEnglish(wordB), state: 'spawning' }
+    ]);
+    // Tự trộn lẫn nhau giữa 2 thẻ mới nạp trước khi đưa vào slot cũ cột phải
+    const rightValues = shuffle([
+      { id: wordA.id, text: wordA.meaning, state: 'spawning' },
+      { id: wordB.id, text: wordB.meaning, state: 'spawning' }
+    ]);
+
+    matchState.leftTiles[leftIdx1] = leftValues[0];
+    matchState.leftTiles[leftIdx2] = leftValues[1];
+
+    matchState.rightTiles[rightIdx1] = rightValues[0];
+    matchState.rightTiles[rightIdx2] = rightValues[1];
+  } else if (matchState.pool.length === 1) {
+    const wordA = matchState.pool.shift();
+
+    // 1 từ mới và 1 slot rỗng, trộn lẫn nhau
+    const leftValues = shuffle([
+      { id: wordA.id, text: getEnglish(wordA), state: 'spawning' },
+      { state: 'empty' }
+    ]);
+    const rightValues = shuffle([
+      { id: wordA.id, text: wordA.meaning, state: 'spawning' },
+      { state: 'empty' }
+    ]);
+
+    matchState.leftTiles[leftIdx1] = leftValues[0];
+    matchState.leftTiles[leftIdx2] = leftValues[1];
+
+    matchState.rightTiles[rightIdx1] = rightValues[0];
+    matchState.rightTiles[rightIdx2] = rightValues[1];
+  } else {
+    // Rỗng hoàn toàn trong pool, đặt các slot đã ghép thành trống
+    matchState.leftTiles[leftIdx1] = { state: 'empty' };
+    matchState.leftTiles[leftIdx2] = { state: 'empty' };
+
+    matchState.rightTiles[rightIdx1] = { state: 'empty' };
+    matchState.rightTiles[rightIdx2] = { state: 'empty' };
   }
 
+  // Xóa bộ đệm sau khi thay thế
+  matchState.pendingMatches = [];
   matchState.selected = [];
   matchState.locked = false;
 
-  if (matchState.active.length === 0) {
+  // Kiểm tra xem tất cả các ô đã trống chưa để kết thúc game
+  const allEmpty = matchState.leftTiles.every(t => t.state === 'empty');
+  if (allEmpty) {
     endMatchPairs();
   } else {
     renderMatchBoard();
