@@ -81,7 +81,7 @@ function showQuizConfig() {
   const modes = [
     { value: 'quiz', label: 'Quiz Văn bản', icon: 'edit-3', desc: 'Trả lời câu hỏi dịch thuật', color: 'var(--primary)' },
     { value: 'listening', label: 'Listening', icon: 'headphones', desc: 'Nghe và gõ lại tiếng Anh', color: '#7c3aed' },
-    { value: 'matchpairs', label: 'Match Pairs', icon: 'shuffle', desc: 'Ghép cặp từ Anh - Việt trong 90 giây', color: '#e11d48' }
+    { value: 'matchpairs', label: 'Match Pairs', icon: 'shuffle', desc: 'Ghép cặp từ Anh', color: '#e11d48' }
   ];
 
   document.getElementById('practiceConfig').innerHTML = `
@@ -532,7 +532,6 @@ async function speakWord(word) {
 
 // ── Match Pairs ──────────────────────────────────────────────
 const MATCH_PAIRS_COUNT = 6;
-const MATCH_TIMER_SECONDS = 90;
 
 let matchState = null;
 
@@ -545,11 +544,15 @@ function startMatchPairs(words) {
   const leftTiles = shuffle(active.map(w => ({ id: w.id, text: getEnglish(w), state: 'active' })));
   const rightTiles = shuffle(active.map(w => ({ id: w.id, text: w.meaning, state: 'active' })));
 
+  const initialTime = 5 + (words.length * 2.5);
+
   matchState = {
     pool,
     leftTiles,
     rightTiles,
-    timer: MATCH_TIMER_SECONDS,
+    timer: initialTime,
+    initialTime: initialTime,
+    totalPairs: words.length,
     matched: 0,
     attempts: 0,
     combo: 0,
@@ -578,8 +581,8 @@ function matchTick() {
 function updateMatchTimer() {
   const fill = document.getElementById('matchTimerFill');
   const label = document.getElementById('matchTimerLabel');
-  if (fill) fill.style.width = `${(matchState.timer / MATCH_TIMER_SECONDS) * 100}%`;
-  if (label) label.textContent = `${matchState.timer}s`;
+  if (fill) fill.style.width = `${Math.min(100, Math.max(0, (matchState.timer / matchState.initialTime) * 100))}%`;
+  if (label) label.textContent = `${Math.max(0, matchState.timer).toFixed(1)}s`;
 }
 
 function renderTileHTML(t, index, side, isFirstRender) {
@@ -606,11 +609,11 @@ function renderMatchBoard(isFirstRender = false) {
         <div class="match-stats-row">
           <div class="match-badge badge-correct"><i data-lucide="check" width="14" height="14"></i> <span id="matchStatsMatched">${matchState.matched}</span></div>
           <div class="match-badge badge-timer" id="matchComboBadge"><i data-lucide="zap" width="14" height="14"></i> <span id="matchCombo">${matchState.combo}</span></div>
-          <div class="match-badge badge-timer" id="matchTimerLabel">${matchState.timer}s</div>
+          <div class="match-badge badge-timer" id="matchTimerLabel">${Math.max(0, matchState.timer).toFixed(1)}s</div>
         </div>
       </div>
       <div class="match-timer-bar">
-        <div id="matchTimerFill" class="match-timer-fill" style="width:${(matchState.timer / MATCH_TIMER_SECONDS) * 100}%"></div>
+        <div id="matchTimerFill" class="match-timer-fill" style="width:${Math.min(100, Math.max(0, (matchState.timer / matchState.initialTime) * 100))}%"></div>
       </div>
       <div class="match-board">
         <div class="match-column">
@@ -674,6 +677,9 @@ function checkMatchPair() {
     const points = 100 + (matchState.combo - 1) * 50;
     matchState.score += points;
 
+    matchState.timer += 0.3;
+    updateMatchTimer();
+
     // Trước tiên áp dụng class match-correct để tạo hiệu ứng nhấp nháy xanh lá (pop) cực đẹp
     a.classList.remove('selected');
     b.classList.remove('selected');
@@ -734,6 +740,13 @@ function checkMatchPair() {
 
     a.classList.add('wrong');
     b.classList.add('wrong');
+
+    matchState.timer -= 0.7;
+    if (matchState.timer < 0) matchState.timer = 0;
+    updateMatchTimer();
+    if (matchState.timer <= 0) {
+      endMatchPairs();
+    }
 
     setTimeout(() => {
       a.classList.remove('selected', 'wrong');
@@ -861,12 +874,12 @@ function endMatchPairs() {
     matchState.intervalId = null;
   }
 
-  const attempts = matchState.attempts || 1;
-  const accuracy = Math.round((matchState.matched / attempts) * 100);
+  const totalPairs = matchState.totalPairs || 1;
+  const accuracy = Math.round((matchState.matched / totalPairs) * 100);
 
   const user = auth.currentUser;
   if (user) {
-    saveMatchPairsAttempt(user.uid, attempts, matchState.matched, accuracy);
+    saveMatchPairsAttempt(user.uid, totalPairs, matchState.matched, accuracy);
   }
 
   let emojiIcon = 'trophy';
@@ -885,7 +898,7 @@ function endMatchPairs() {
 
         <div class="match-stats-grid">
           <div class="match-stat">
-            <div class="match-stat-value text-primary">${matchState.matched}</div>
+            <div class="match-stat-value text-primary">${matchState.matched}/${totalPairs}</div>
             <div class="match-stat-label">Cặp đã ghép</div>
           </div>
           <div class="match-stat">
