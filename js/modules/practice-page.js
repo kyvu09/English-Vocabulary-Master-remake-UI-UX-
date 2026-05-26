@@ -1,5 +1,5 @@
 // Module Trang Luyện tập (Practice Page) - Hỗ trợ Quiz hai chiều, thống kê chi tiết, luyện nghe
-import { auth, db, updateUserTotalPoints } from '../../firebase-config.js';
+import { auth, db, updateUserTotalPoints, triggerStreakAction } from '../../firebase-config.js';
 import { 
   collection, query, orderBy, getDocs, doc, 
   serverTimestamp, writeBatch
@@ -575,6 +575,11 @@ async function showResults() {
       } catch (err) {
         console.error('Lỗi khi cập nhật điểm rank:', err);
       }
+      try {
+        await triggerStreakAction(user.uid);
+      } catch (err) {
+        console.error('Lỗi khi kích hoạt streak:', err);
+      }
     } catch (err) {
       console.error('Save error:', err);
     }
@@ -1001,6 +1006,11 @@ async function saveMatchPairsAttempt(userId, total, correct, percent, points, ma
       await updateUserTotalPoints(userId);
     } catch (err) {
       console.error('Lỗi khi cập nhật điểm rank:', err);
+    }
+    try {
+      await triggerStreakAction(userId);
+    } catch (err) {
+      console.error('Lỗi khi kích hoạt streak:', err);
     }
   } catch (err) {
     console.error('Lỗi khi lưu kết quả ghép cặp:', err);

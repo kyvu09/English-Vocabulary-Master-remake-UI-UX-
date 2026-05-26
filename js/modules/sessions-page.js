@@ -1,5 +1,5 @@
 // Module Trang Buổi học (Sessions Page)
-import { auth, db } from '../../firebase-config.js';
+import { auth, db, triggerStreakAction } from '../../firebase-config.js';
 import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { showAlert, showConfirm } from '../core/ui-utils.js';
 import { normalizeText, slugify } from '../core/data-utils.js';
@@ -112,6 +112,11 @@ async function createSession() {
       createdAt: serverTimestamp(),
     });
     sessionModalInstance.hide();
+    try {
+      await triggerStreakAction(user.uid);
+    } catch (err) {
+      console.error('Lỗi khi kích hoạt streak:', err);
+    }
   } catch (err) {
     await showAlert('Tạo thất bại: ' + err.message, 'Lỗi');
   } finally {

@@ -6,6 +6,7 @@ import {
   LOGIN_PAGE,
   updateUserTotalPoints
 } from "./firebase-config.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   onAuthStateChanged,
   sendPasswordResetEmail,
@@ -367,6 +368,47 @@ function startRouterOnce() {
   initRouter();
 }
 
+window.updateStreakHeaderUI = function(streakCount, streakActive) {
+  const badge = document.getElementById("streakBadge");
+  const icon = document.getElementById("streakIcon");
+  const countText = document.getElementById("streakCountText");
+  
+  if (!badge || !icon || !countText) return;
+  
+  countText.textContent = streakCount;
+  
+  if (streakCount > 0 && streakActive) {
+    badge.classList.remove("inactive");
+    badge.classList.add("active");
+    
+    // Choose color based on streak count
+    let color = "#ffcc00"; // yellow
+    if (streakCount >= 30) {
+      color = "#007aff"; // Cosmic Blue
+    } else if (streakCount >= 15) {
+      color = "#af52de"; // Mystical Purple
+    } else if (streakCount >= 7) {
+      color = "#ff3b30"; // Fiery Red
+    } else if (streakCount >= 3) {
+      color = "#ff9500"; // Vibrant Orange
+    }
+    
+    icon.style.color = color;
+    icon.style.filter = `drop-shadow(0 0 5px ${color}80)`;
+    badge.style.borderColor = `${color}40`;
+    badge.style.background = `${color}0b`;
+    countText.style.color = color;
+  } else {
+    badge.classList.remove("active");
+    badge.classList.add("inactive");
+    icon.style.color = "";
+    icon.style.filter = "";
+    badge.style.borderColor = "";
+    badge.style.background = "";
+    countText.style.color = "";
+  }
+};
+
 function init() {
   initTheme();
 
@@ -388,8 +430,37 @@ function init() {
     try {
       await ensureUserProfile(user);
       await updateUserTotalPoints(user.uid);
+      
+      // Load streak info
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        const streakCount = data.streakCount || 0;
+        const lastStreakDate = data.lastStreakDate || "";
+        const todayStr = new Date().toLocaleDateString('sv-SE');
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toLocaleDateString('sv-SE');
+        
+        let streakActive = false;
+        let displayCount = 0;
+        
+        if (lastStreakDate === todayStr) {
+          streakActive = true;
+          displayCount = streakCount;
+        } else if (lastStreakDate === yesterdayStr) {
+          streakActive = false;
+          displayCount = streakCount;
+        } else {
+          streakActive = false;
+          displayCount = 0;
+        }
+        
+        window.updateStreakHeaderUI(displayCount, streakActive);
+      }
     } catch (error) {
-      console.error("ensureUserProfile/updateUserTotalPoints failed", error);
+      console.error("ensureUserProfile/updateUserTotalPoints/streak failed", error);
     }
 
     updateUserUI(auth.currentUser);

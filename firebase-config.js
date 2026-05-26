@@ -148,3 +148,51 @@ export async function updateUserTotalPoints(userId) {
 
   return totalPoints;
 }
+
+export async function triggerStreakAction(userId) {
+  if (!db || !userId) return;
+
+  const userRef = doc(db, "users", userId);
+  const userSnap = await getDoc(userRef);
+  
+  let streakCount = 0;
+  let lastStreakDate = "";
+  
+  if (userSnap.exists()) {
+    const data = userSnap.data();
+    streakCount = data.streakCount || 0;
+    lastStreakDate = data.lastStreakDate || "";
+  }
+  
+  const todayStr = new Date().toLocaleDateString('sv-SE'); // "YYYY-MM-DD"
+  
+  // Calculate yesterday
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toLocaleDateString('sv-SE');
+  
+  if (lastStreakDate === todayStr) {
+    // Already did an action today, do nothing
+    return;
+  }
+  
+  let newStreak = 1;
+  if (lastStreakDate === yesterdayStr) {
+    // Continued from yesterday
+    newStreak = streakCount + 1;
+  } else {
+    // Reset/first time
+    newStreak = 1;
+  }
+  
+  await setDoc(userRef, {
+    streakCount: newStreak,
+    lastStreakDate: todayStr
+  }, { merge: true });
+
+  // Update global header streak UI if defined
+  if (window.updateStreakHeaderUI) {
+    window.updateStreakHeaderUI(newStreak, true);
+  }
+}

@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg: #f4f7fb;
   --surface: rgba(255, 255, 255, 0.92);
   --surface-strong: #ffffff;
@@ -1283,4 +1283,65 @@ tbody tr:last-child td {
 }
 .animate-spawn-tile {
   animation: matchTileSpawn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Daily Streak CSS */
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  user-select: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.streak-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-soft);
+}
+
+.streak-badge.active {
+  animation: streakGlow 2s infinite alternate;
+}
+
+@keyframes streakGlow {
+  0% {
+    box-shadow: 0 0 4px rgba(255, 149, 0, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 12px rgba(255, 149, 0, 0.25);
+  }
+}
+
+.streak-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.streak-icon {
+  width: 20px;
+  height: 20px;
+  transition: all 0.3s ease;
+}
+
+.streak-badge.inactive .streak-icon {
+  color: #8e8e93 !important;
+  filter: grayscale(100%) opacity(50%) !important;
+}
+
+.streak-badge.inactive {
+  background: var(--surface-soft);
+  border-color: var(--line) !important;
+}
+
+.streak-badge.inactive .streak-count {
+  color: var(--text-muted) !important;
 }
