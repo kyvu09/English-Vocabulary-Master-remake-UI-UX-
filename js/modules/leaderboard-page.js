@@ -106,21 +106,47 @@ function loadPersonalRank() {
     let nextResetDateStr = '--/--/----';
     let carryOverEstimate = Math.round(totalPoints / 3);
 
-    if (rankPeriodStartAt) {
-      const periodTime = rankPeriodStartAt.toDate ? rankPeriodStartAt.toDate().getTime() : new Date(rankPeriodStartAt).getTime();
-      const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-      const resetTime = periodTime + ONE_WEEK_MS;
-      nextResetDateStr = new Date(resetTime).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+   if (rankPeriodStartAt) {
+  const periodTime = rankPeriodStartAt.toDate
+    ? rankPeriodStartAt.toDate().getTime()
+    : new Date(rankPeriodStartAt).getTime();
 
-      const timeLeftMs = resetTime - Date.now();
-      if (timeLeftMs > 0) {
-        const days = Math.floor(timeLeftMs / (24 * 60 * 60 * 1000));
-        const hours = Math.floor((timeLeftMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
-        timeLeftStr = `${days} ngày ${hours} giờ`;
-      } else {
-        timeLeftStr = 'Chu kỳ đã kết thúc. Sắp reset!';
-      }
+  const resetDate = new Date(periodTime);
+
+  // +7 ngày
+  resetDate.setDate(resetDate.getDate() + 7);
+
+  // reset lúc 00:00
+  resetDate.setHours(0, 0, 0, 0);
+
+  const resetTime = resetDate.getTime();
+
+  nextResetDateStr = resetDate.toLocaleDateString(
+    'vi-VN',
+    {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     }
+  );
+
+  const timeLeftMs = resetTime - Date.now();
+
+  if (timeLeftMs > 0) {
+    const days = Math.floor(timeLeftMs / (24 * 60 * 60 * 1000));
+
+    const hours = Math.floor(
+      (timeLeftMs % (24 * 60 * 60 * 1000))
+      / (60 * 60 * 1000)
+    );
+
+    timeLeftStr = `${days} ngày ${hours} giờ`;
+  } else {
+    timeLeftStr = 'Chu kỳ đã kết thúc. Sắp reset!';
+  }
+}
 
     // Query attempts to get score breakdown
     let pointsFromMatchPairs = 0;
