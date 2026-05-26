@@ -1151,12 +1151,10 @@ tbody tr:last-child td {
 }
 
 .match-tile.matched {
-  opacity: 0.3 !important;
+  opacity: 0 !important;
   pointer-events: none;
-  transform: scale(0.96);
-  border-color: transparent !important;
-  background: var(--surface-soft) !important;
-  color: var(--muted) !important;
+  visibility: hidden;
+  transform: scale(0.92);
   box-shadow: none !important;
 }
 

@@ -682,7 +682,7 @@ function startMatchPairs(words) {
   const leftTiles = shuffle(active.map(w => ({ id: w.id, text: getEnglish(w), state: 'active' })));
   const rightTiles = shuffle(active.map(w => ({ id: w.id, text: w.meaning, state: 'active' })));
 
-  const initialTime = 5 + (words.length * 2.5);
+  const initialTime = 10 + (words.length * 2.5);
 
   matchState = {
     pool,
@@ -839,9 +839,6 @@ function checkMatchPair() {
     matchState.leftTiles[leftIdx].state = 'matched';
     matchState.rightTiles[rightIdx].state = 'matched';
 
-    // Lưu cặp chỉ số vừa ghép đúng vào bộ đệm pendingMatches
-    matchState.pendingMatches.push({ leftIdx, rightIdx });
-
     // Sau khi hiệu ứng nhấp nháy xanh lá (pop) chạy được 400ms, chuyển sang trạng thái ẩn mờ (matched)
     setTimeout(() => {
       a.classList.remove('match-correct');
@@ -856,20 +853,27 @@ function checkMatchPair() {
     matchState.selected = [];
     matchState.locked = false;
 
-    // Nếu đã ghép đúng đủ 2 cặp, tiến hành thay thế và tự trộn lẫn nhau
-    if (matchState.pendingMatches.length === 2) {
-      matchState.locked = true; // Khóa bảng tạm thời để thực hiện thay thế
+    // Kiểm tra xem tất cả các ô trong lượt hiện tại đã được ghép đúng chưa
+    const allCurrentMatched = matchState.leftTiles.every(t => t.state === 'matched' || t.state === 'empty');
+    if (allCurrentMatched) {
+      matchState.locked = true; // Khóa tạm thời bảng
       setTimeout(() => {
-        replacePendingPairs();
-      }, 600);
-    } else {
-      // Trường hợp đặc biệt: không còn thẻ hoạt động nào trên bảng và pool rỗng (kết thúc game)
-      const activeCount = matchState.leftTiles.filter(t => t.state === 'active' || t.state === 'spawning').length;
-      if (activeCount === 0) {
-        setTimeout(() => {
+        // Nạp lượt tiếp theo
+        if (matchState.pool.length > 0) {
+          const nextActive = matchState.pool.slice(0, MATCH_PAIRS_COUNT);
+          matchState.pool = matchState.pool.slice(MATCH_PAIRS_COUNT);
+
+          matchState.leftTiles = shuffle(nextActive.map(w => ({ id: w.id, text: getEnglish(w), state: 'spawning' })));
+          matchState.rightTiles = shuffle(nextActive.map(w => ({ id: w.id, text: w.meaning, state: 'spawning' })));
+
+          matchState.selected = [];
+          matchState.locked = false;
+          renderMatchBoard(false);
+        } else {
+          // Pool rỗng và mọi thứ đã hoàn thành -> kết thúc game
           endMatchPairs();
-        }, 600);
-      }
+        }
+      }, 800);
     }
   } else {
     matchState.combo = 0;
@@ -892,76 +896,6 @@ function checkMatchPair() {
       matchState.selected = [];
       matchState.locked = false;
     }, 500);
-  }
-}
-
-function replacePendingPairs() {
-  if (matchState.finished) return;
-
-  const [pair1, pair2] = matchState.pendingMatches;
-  const leftIdx1 = pair1.leftIdx;
-  const rightIdx1 = pair1.rightIdx;
-  const leftIdx2 = pair2.leftIdx;
-  const rightIdx2 = pair2.rightIdx;
-
-  if (matchState.pool.length >= 2) {
-    const wordA = matchState.pool.shift();
-    const wordB = matchState.pool.shift();
-
-    // Tự trộn lẫn nhau giữa 2 thẻ mới nạp trước khi đưa vào slot cũ cột trái
-    const leftValues = shuffle([
-      { id: wordA.id, text: getEnglish(wordA), state: 'spawning' },
-      { id: wordB.id, text: getEnglish(wordB), state: 'spawning' }
-    ]);
-    // Tự trộn lẫn nhau giữa 2 thẻ mới nạp trước khi đưa vào slot cũ cột phải
-    const rightValues = shuffle([
-      { id: wordA.id, text: wordA.meaning, state: 'spawning' },
-      { id: wordB.id, text: wordB.meaning, state: 'spawning' }
-    ]);
-
-    matchState.leftTiles[leftIdx1] = leftValues[0];
-    matchState.leftTiles[leftIdx2] = leftValues[1];
-
-    matchState.rightTiles[rightIdx1] = rightValues[0];
-    matchState.rightTiles[rightIdx2] = rightValues[1];
-  } else if (matchState.pool.length === 1) {
-    const wordA = matchState.pool.shift();
-
-    // 1 từ mới và 1 slot rỗng, trộn lẫn nhau
-    const leftValues = shuffle([
-      { id: wordA.id, text: getEnglish(wordA), state: 'spawning' },
-      { state: 'empty' }
-    ]);
-    const rightValues = shuffle([
-      { id: wordA.id, text: wordA.meaning, state: 'spawning' },
-      { state: 'empty' }
-    ]);
-
-    matchState.leftTiles[leftIdx1] = leftValues[0];
-    matchState.leftTiles[leftIdx2] = leftValues[1];
-
-    matchState.rightTiles[rightIdx1] = rightValues[0];
-    matchState.rightTiles[rightIdx2] = rightValues[1];
-  } else {
-    // Rỗng hoàn toàn trong pool, đặt các slot đã ghép thành trống
-    matchState.leftTiles[leftIdx1] = { state: 'empty' };
-    matchState.leftTiles[leftIdx2] = { state: 'empty' };
-
-    matchState.rightTiles[rightIdx1] = { state: 'empty' };
-    matchState.rightTiles[rightIdx2] = { state: 'empty' };
-  }
-
-  // Xóa bộ đệm sau khi thay thế
-  matchState.pendingMatches = [];
-  matchState.selected = [];
-  matchState.locked = false;
-
-  // Kiểm tra xem tất cả các ô đã trống chưa để kết thúc game
-  const allEmpty = matchState.leftTiles.every(t => t.state === 'empty');
-  if (allEmpty) {
-    endMatchPairs();
-  } else {
-    renderMatchBoard();
   }
 }
 
