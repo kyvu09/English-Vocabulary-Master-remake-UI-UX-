@@ -14,6 +14,7 @@ const PART_OF_SPEECH = {
 };
 
 let allWords = [];
+let weakWords = [];
 let sessions = [];
 let quizState = null;
 let allMeanings = [];
@@ -57,6 +58,17 @@ export async function mount() {
   allWords = vocabSnap.docs
     .map(d => ({ id: d.id, ...d.data() }))
     .filter(w => getEnglish(w) && w.meaning);
+
+  // In-memory weak words calculation: error rate >= 30% and attempted >= 2 times
+  weakWords = allWords.filter(w => {
+    const stats = w.stats || {};
+    const wrong = stats.wrongCount || 0;
+    const correct = stats.correctCount || 0;
+    const total = stats.totalAnswered || (wrong + correct);
+    if (total < 2) return false;
+    return (wrong / total) >= 0.3;
+  });
+
   defaultSourceId = resolveSessionFilterId();
   allMeanings = [...new Set(allWords.flatMap(w => w.meaning.split(/[;,/|]/).map(m => m.trim())))].filter(Boolean);
 
@@ -81,8 +93,46 @@ function showQuizConfig() {
   const modes = [
     { value: 'quiz', label: 'Quiz Văn bản', icon: 'edit-3', desc: 'Trả lời câu hỏi dịch thuật', color: 'var(--primary)' },
     { value: 'listening', label: 'Listening', icon: 'headphones', desc: 'Nghe và gõ lại tiếng Anh', color: '#7c3aed' },
-    { value: 'matchpairs', label: 'Match Pairs', icon: 'shuffle', desc: 'Ghép cặp từ Anh', color: '#e11d48' }
+    { value: 'matchpairs', label: 'Match Pairs', icon: 'shuffle', desc: 'Ghép cặp từ Anh', color: '#e11d48' },
+    { value: 'ai_quiz', label: 'AI Quiz', icon: 'sparkles', desc: 'Trắc nghiệm tạo bởi AI', color: '#0ea5e9' }
   ];
+
+  let weakReviewHtml = '';
+  if (weakWords.length > 0) {
+    weakReviewHtml = `
+      <div class="card animate-enter mt-4" style="border-left: 4px solid var(--danger);">
+        <h3 class="m-0 mb-3 d-flex align-items-center gap-2 text-danger"><i data-lucide="alert-circle"></i> Từ vựng hay làm sai cần ôn tập</h3>
+        <p class="text-muted small">Dưới đây là các từ bạn có tỷ lệ trả lời sai từ 30% trở lên (tính trên các từ bạn đã làm ít nhất 2 lần).</p>
+        <div class="table-responsive mb-3" style="max-height: 240px; overflow-y: auto;">
+          <table class="table table-sm table-hover m-0" style="min-width: 480px;">
+            <thead>
+              <tr style="border-bottom: 2px solid var(--line);">
+                <th style="font-size:0.85rem; color:var(--muted); font-weight:700;">Từ tiếng Anh</th>
+                <th style="font-size:0.85rem; color:var(--muted); font-weight:700;">Nghĩa tiếng Việt</th>
+                <th style="font-size:0.85rem; color:var(--muted); font-weight:700; text-align:center;">Tỷ lệ sai</th>
+                <th style="font-size:0.85rem; color:var(--muted); font-weight:700; text-align:center;">Tổng lượt làm</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${weakWords.map(w => {
+                const wrong = w.stats?.wrongCount || 0;
+                const total = w.stats?.totalAnswered || 0;
+                const rate = total ? Math.round((wrong / total) * 100) : 0;
+                return `
+                  <tr style="border-bottom: 1px solid var(--line-soft);">
+                    <td class="fw-bold text-danger" style="font-size:0.9rem; padding:8px 4px;">${getEnglish(w)}</td>
+                    <td class="text-muted" style="font-size:0.9rem; padding:8px 4px;">${w.meaning}</td>
+                    <td class="text-danger fw-bold" style="font-size:0.9rem; text-align:center; padding:8px 4px;">${rate}%</td>
+                    <td class="text-muted" style="font-size:0.9rem; text-align:center; padding:8px 4px;">${total}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
 
   document.getElementById('practiceConfig').innerHTML = `
     <div class="card animate-enter">
@@ -91,7 +141,7 @@ function showQuizConfig() {
       <label class="form-label fw-semibold mb-3">Chọn chế độ</label>
       <div class="row g-3 mb-4" id="modeCardsContainer">
         ${modes.map((m) => `
-          <div class="col-sm-4">
+          <div class="col-md-3 col-sm-6">
             <div class="card h-100 mode-card" data-mode="${m.value}" style="cursor:pointer; text-align:center; padding:20px 16px; border:2px solid var(--line); opacity: 0.85; transition: all var(--transition-fast);">
               <div style="font-size:2rem; color:${m.color}; margin-bottom:8px;"><i data-lucide="${m.icon}" width="32" height="32"></i></div>
               <h4 class="m-0 fs-6 fw-bold" style="color:${m.color};">${m.label}</h4>
@@ -103,6 +153,14 @@ function showQuizConfig() {
 
       <!-- Phần cấu hình các tùy chọn (Loại dịch, Nguồn từ, Số câu hỏi và Bắt đầu) sẽ ẩn ban đầu -->
       <div id="quizOptionsContainer" style="display: none;" class="animate-enter">
+        ${weakWords.length ? `
+          <div class="form-check form-switch mb-4 p-3 bg-danger-subtle rounded-3 border border-danger-subtle d-flex align-items-center gap-2" style="padding-left: 2.85rem !important;">
+            <input class="form-check-input" type="checkbox" id="practiceWeakCheckbox" style="cursor:pointer; width: 2.2em; height: 1.1em;" />
+            <label class="form-check-label fw-bold text-danger-emphasis mb-0" for="practiceWeakCheckbox" style="cursor:pointer; user-select:none;">
+              <i data-lucide="zap" width="16" height="16"></i> Chỉ luyện tập từ vựng hay làm sai (${weakWords.length} từ)
+            </label>
+          </div>
+        ` : ''}
         <div class="row g-3 mb-4">
           <div class="col-sm-6" id="directionSelectContainer">
             <label class="form-label fw-semibold">Loại dịch</label>
@@ -112,10 +170,11 @@ function showQuizConfig() {
               <option value="vi-en">Tiếng Việt → English</option>
             </select>
           </div>
-          <div class="col-sm-6">
+          <div class="col-sm-6" id="sourceSelectContainer">
             <label class="form-label fw-semibold">Nguồn từ</label>
             <select id="sourceSelect" class="form-select">
               <option value="all" ${defaultSourceId === 'all' ? 'selected' : ''}>Tất cả từ vựng (${allWords.length})</option>
+              ${weakWords.length ? `<option value="weak" ${defaultSourceId === 'weak' ? 'selected' : ''}>Từ vựng hay làm sai (${weakWords.length})</option>` : ''}
               ${sessions.map(s => `<option value="${s.id}" ${defaultSourceId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
             </select>
           </div>
@@ -131,13 +190,14 @@ function showQuizConfig() {
         </div>
       </div>
     </div>
+    ${weakReviewHtml}
   `;
   document.getElementById('practiceQuizContent').innerHTML = '';
   if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceConfig') });
 
   // Reset về chưa chọn khi tải cấu hình
   selectedMode = null;
-  const modeColors = { quiz: '#2563eb', listening: '#7c3aed', matchpairs: '#e11d48' };
+  const modeColors = { quiz: '#2563eb', listening: '#7c3aed', matchpairs: '#e11d48', ai_quiz: '#0ea5e9' };
   document.getElementById('modeCardsContainer').addEventListener('click', (e) => {
     const card = e.target.closest('.mode-card');
     if (!card) return;
@@ -165,16 +225,196 @@ function showQuizConfig() {
       if (newMode === 'quiz') {
         directionContainer.style.display = 'block';
       } else {
-        // Listening & Match Pairs không cần cấu hình Loại dịch
+        // Listening & Match Pairs & AI Quiz không cần cấu hình Loại dịch
         directionContainer.style.display = 'none';
       }
     }
   });
 
+
+
+  const weakCheckbox = document.getElementById('practiceWeakCheckbox');
+  const sourceSelect = document.getElementById('sourceSelect');
+  const sourceSelectContainer = document.getElementById('sourceSelectContainer');
+  const countInput = document.getElementById('wordCountInput');
+
+  let previousSource = sourceSelect ? sourceSelect.value : 'all';
+
+  if (weakCheckbox) {
+    weakCheckbox.addEventListener('change', () => {
+      if (weakCheckbox.checked) {
+        if (sourceSelect) {
+          previousSource = sourceSelect.value !== 'weak' ? sourceSelect.value : 'all';
+          sourceSelect.value = 'weak';
+          sourceSelect.disabled = true;
+        }
+        if (sourceSelectContainer) {
+          sourceSelectContainer.style.opacity = '0.5';
+        }
+        if (countInput) {
+          countInput.max = weakWords.length;
+          countInput.value = Math.min(parseInt(countInput.value) || 10, weakWords.length);
+        }
+      } else {
+        if (sourceSelect) {
+          sourceSelect.value = previousSource;
+          sourceSelect.disabled = false;
+        }
+        if (sourceSelectContainer) {
+          sourceSelectContainer.style.opacity = '1';
+        }
+        if (countInput) {
+          // Restore max based on the restored source select
+          const currentSource = sourceSelect ? sourceSelect.value : 'all';
+          let maxVal = allWords.length;
+          if (currentSource === 'weak') {
+            maxVal = weakWords.length;
+          } else if (currentSource !== 'all') {
+            const selectedSession = sessions.find(s => s.id === currentSource);
+            if (selectedSession) {
+              const sessionWords = allWords.filter(w => w.sessionId === currentSource || (!w.sessionId && w.sessionName === selectedSession.name));
+              maxVal = sessionWords.length;
+            }
+          }
+          countInput.max = maxVal;
+          countInput.value = Math.min(parseInt(countInput.value) || 10, maxVal);
+        }
+      }
+    });
+  }
+
+  if (sourceSelect) {
+    sourceSelect.addEventListener('change', () => {
+      const currentSource = sourceSelect.value;
+      let maxVal = allWords.length;
+      if (currentSource === 'weak') {
+        maxVal = weakWords.length;
+        if (weakCheckbox) weakCheckbox.checked = true;
+        if (sourceSelectContainer) sourceSelectContainer.style.opacity = '0.5';
+        sourceSelect.disabled = true;
+      } else {
+        if (currentSource !== 'all') {
+          const selectedSession = sessions.find(s => s.id === currentSource);
+          if (selectedSession) {
+            const sessionWords = allWords.filter(w => w.sessionId === currentSource || (!w.sessionId && w.sessionName === selectedSession.name));
+            maxVal = sessionWords.length;
+          }
+        }
+      }
+      if (countInput) {
+        countInput.max = maxVal;
+        countInput.value = Math.min(parseInt(countInput.value) || 10, maxVal);
+      }
+    });
+  }
+
   document.getElementById('startQuizBtn').addEventListener('click', startQuiz);
   document.getElementById('cancelBtn').addEventListener('click', () => window.router?.navigateTo('dashboard'));
 }
 
+
+async function generateAIQuestions(words, count) {
+  const apiKey = window.__APP_CONFIG__?.GEMINI_API_KEY;
+  const MAX_RETRIES = 3;
+  const INITIAL_DELAY = 1000; // 1 second
+
+  // Format the vocabulary words to feed into the prompt
+  const vocabList = words.map((w, idx) => `${idx + 1}. English: "${getEnglish(w)}", Meaning: "${w.meaning}", POS: "${w.partOfSpeech || 'other'}"`).join('\n');
+
+  const promptText = `Bạn là trợ lý AI dạy Tiếng Anh xuất sắc. Hãy tạo ra đúng ${count} câu hỏi trắc nghiệm tiếng Anh (Multiple Choice Questions) dạng trắc nghiệm 4 lựa chọn (A, B, C, D) cho người Việt học tiếng Anh.
+Các từ vựng mục tiêu cần kiểm tra PHẢI được chọn từ danh sách sau:
+${vocabList}
+
+YÊU CẦU:
+1. Mỗi câu hỏi chỉ được kiểm tra đúng một từ vựng mục tiêu trong danh sách trên.
+2. Cấu trúc câu hỏi:
+- Mỗi câu chỉ kiểm tra 1 từ trong danh sách.
+- Chỉ sử dụng dạng hoàn thành câu với chỗ trống (____).
+- Độ khó của câu phải tương ứng với độ khó CEFR của từ vựng:
+  + Từ dễ => câu đơn giản.
+  + Từ khó => ngữ cảnh phức tạp hơn.
+3. Cung cấp chính xác 4 phương án lựa chọn trong mảng "options". Các phương án nhiễu phải thực tế. Các phương án nên được đánh dấu hoặc bắt đầu bằng A, B, C, D (ví dụ: ["A. ...", "B. ...", "C. ...", "D. ..."]).
+4. Cung cấp "correctOptionIndex" là chỉ số (0, 1, 2, hoặc 3) của phương án đúng trong mảng "options".
+5. Cung cấp "explanation" là lời giải thích chi tiết, ngắn gọn bằng Tiếng Việt tại sao phương án đó đúng, dịch nghĩa của câu và từ vựng liên quan.
+
+Bắt buộc trả về kết quả khớp đúng với định dạng Schema JSON được yêu cầu.`;
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: promptText
+            }]
+          }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  word: { type: "STRING" },
+                  question: { type: "STRING" },
+                  options: {
+                    type: "ARRAY",
+                    items: { type: "STRING" }
+                  },
+                  correctOptionIndex: { type: "INTEGER", description: "0-indexed correct option in options array (0 to 3)" },
+                  explanation: { type: "STRING" }
+                },
+                required: ["word", "question", "options", "correctOptionIndex", "explanation"]
+              }
+            }
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        const errorMsg = `Gemini API error: ${response.status} - ${errText}`;
+
+        if (response.status === 503 && attempt < MAX_RETRIES - 1) {
+          const delay = INITIAL_DELAY * Math.pow(2, attempt);
+          console.warn(`API temporarily unavailable. Retrying in ${delay}ms... (Attempt ${attempt + 1}/${MAX_RETRIES})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        throw new Error(errorMsg);
+      }
+
+      const data = await response.json();
+      const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!candidateText) {
+        throw new Error("Không nhận được dữ liệu hợp lệ từ Gemini AI.");
+      }
+
+      const questions = JSON.parse(candidateText);
+
+      // Map questions back to their Firestore word IDs if possible
+      return questions.map(q => {
+        const matchedWord = words.find(w => getEnglish(w).toLowerCase() === q.word.toLowerCase());
+        return {
+          id: matchedWord?.id || words[Math.floor(Math.random() * words.length)].id,
+          english: q.word,
+          meaning: matchedWord?.meaning || q.word,
+          direction: 'ai',
+          ...q
+        };
+      });
+    } catch (error) {
+      if (attempt === MAX_RETRIES - 1) {
+        console.error("AI Generation Error:", error);
+        throw error;
+      }
+    }
+  }
+}
 
 async function startQuiz() {
   if (!selectedMode) {
@@ -187,28 +427,89 @@ async function startQuiz() {
   const mode = selectedMode || 'quiz';
 
   const selectedSession = sessions.find(s => s.id === sourceId);
-  let words = sourceId === 'all'
-    ? [...allWords]
-    : allWords.filter(w => w.sessionId === sourceId || (!w.sessionId && w.sessionName === selectedSession?.name));
+  let words = [];
+  if (sourceId === 'all') {
+    words = [...allWords];
+  } else if (sourceId === 'weak') {
+    words = [...weakWords];
+  } else {
+    words = allWords.filter(w => w.sessionId === sourceId || (!w.sessionId && w.sessionName === selectedSession?.name));
+  }
   
   if (words.length < 1) {
     await showAlert('Không có từ vựng trong phạm vi đã chọn', 'Lưu ý');
     return;
   }
 
-  words = shuffle(words).slice(0, wordCount);
+  const selectedWords = shuffle(words).slice(0, wordCount);
 
-  // Generate questions
+  if (mode === 'ai_quiz') {
+    document.getElementById('practiceConfig').style.display = 'none';
+    document.getElementById('practiceQuizContent').innerHTML = `
+      <div class="card animate-enter text-center" style="padding: 60px 40px;">
+        <div class="spinner-border text-info" role="status" style="width: 4rem; height: 4rem; margin-bottom: 24px; border-width: 0.25em;">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <h3 class="fw-bold text-info">Đang khởi tạo câu hỏi AI...</h3>
+        <p class="text-muted mt-2">Trợ lý Gemini đang soạn thảo bộ câu hỏi trắc nghiệm đặc biệt dựa trên kho từ vựng của bạn. Vui lòng chờ trong giây lát.</p>
+      </div>
+    `;
+
+    try {
+      const apiKey = window.__APP_CONFIG__?.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error('Thiếu GEMINI_API_KEY trong cấu hình. Vui lòng thêm vào env-config.js');
+      }
+
+      const aiQuestions = await generateAIQuestions(selectedWords, wordCount);
+      const initialTime = 5 * aiQuestions.length + (aiQuestions.length * 15);
+
+      quizState = {
+        mode,
+        direction: 'ai',
+        questions: aiQuestions,
+        currentIndex: 0,
+        score: 0,
+        points: 0,
+        combo: 0,
+        maxCombo: 0,
+        timer: initialTime,
+        initialTime: initialTime,
+        intervalId: null,
+        answers: [],
+        finished: false,
+        paused: false
+      };
+
+      renderQuestion();
+      quizState.intervalId = setInterval(quizTick, 1000);
+    } catch (err) {
+      let userMessage = err.message;
+      if (err.message.includes('503')) {
+        userMessage = 'Dịch vụ Gemini AI hiện đang quá tải. Vui lòng thử lại sau vài phút.';
+      } else if (err.message.includes('GEMINI_API_KEY')) {
+        userMessage = err.message;
+      } else {
+        userMessage = `Lỗi khi tạo câu hỏi AI: ${err.message}`;
+      }
+      await showAlert(userMessage, 'Lỗi hệ thống');
+      document.getElementById('practiceConfig').style.display = 'block';
+      document.getElementById('practiceQuizContent').innerHTML = '';
+    }
+    return;
+  }
+
+  // Normal modes
   let questions = [];
   if (direction === 'both') {
-    words.forEach(w => {
+    selectedWords.forEach(w => {
       questions.push({
         ...w,
         direction: Math.random() < 0.5 ? 'en-vi' : 'vi-en'
       });
     });
   } else {
-    words.forEach(w => {
+    selectedWords.forEach(w => {
       questions.push({ ...w, direction });
     });
   }
@@ -218,11 +519,11 @@ async function startQuiz() {
   document.getElementById('practiceConfig').style.display = 'none';
 
   if (mode === 'matchpairs') {
-    startMatchPairs(words);
+    startMatchPairs(selectedWords);
     return;
   }
 
-  const initialTime = 5*questions.length + (questions.length * 12); // Thời gian cơ bản + thêm theo số câu hỏi
+  const initialTime = 5*questions.length + (questions.length * 12);
 
   quizState = {
     mode,
@@ -237,7 +538,8 @@ async function startQuiz() {
     initialTime: initialTime,
     intervalId: null,
     answers: [],
-    finished: false
+    finished: false,
+    paused: false
   };
 
   renderQuestion();
@@ -263,23 +565,26 @@ function renderQuestion() {
   const progress = Math.round((quizState.currentIndex / quizState.questions.length) * 100);
   const isEnVi = q.direction === 'en-vi';
   const isListening = quizState.mode === 'listening';
+  const isAI = quizState.mode === 'ai_quiz';
   const english = getEnglish(q);
 
-  // Chế độ nghe (Listening): luôn nghe tiếng Anh → gõ lại tiếng Anh (chép chính tả)
-  // Chế độ trắc nghiệm (Quiz): hiển thị gợi ý (prompt) dựa theo chiều dịch thông thường
-  const label = isListening
-    ? 'Nghe và gõ lại từ tiếng Anh'
-    : (isEnVi ? 'Dịch sang tiếng Việt' : 'Dịch sang tiếng Anh');
+  const label = isAI
+    ? 'Câu hỏi trắc nghiệm AI'
+    : isListening
+      ? 'Nghe và gõ lại từ tiếng Anh'
+      : (isEnVi ? 'Dịch sang tiếng Việt' : 'Dịch sang tiếng Anh');
 
   const prompt = isEnVi ? english : q.meaning;
-  const promptDisplay = isListening
-    ? `<div style="color:var(--primary); margin-bottom:8px;"><i data-lucide="headphones" width="48" height="48"></i></div>
-       <div style="font-size:1rem; color:var(--muted);">Hãy nghe và gõ lại đúng từ tiếng Anh</div>`
-    : `<div style="font-size:2rem; font-weight:700; color:var(--primary); margin-bottom:16px;">${prompt}</div>
-       ${!isEnVi ? '' : `<div style="font-size:0.9rem; color:var(--muted);">Loại từ: <strong>${PART_OF_SPEECH[q.partOfSpeech] || q.partOfSpeech}</strong></div>`}`;
+  const promptDisplay = isAI
+    ? `<div style="font-size:1.35rem; font-weight:700; color:var(--primary); margin-bottom:16px; text-align:left; line-height:1.4;">${q.question}</div>`
+    : isListening
+      ? `<div style="color:var(--primary); margin-bottom:8px;"><i data-lucide="headphones" width="48" height="48"></i></div>
+         <div style="font-size:1rem; color:var(--muted);">Hãy nghe và gõ lại đúng từ tiếng Anh</div>`
+      : `<div style="font-size:2rem; font-weight:700; color:var(--primary); margin-bottom:16px;">${prompt}</div>
+         ${!isEnVi ? '' : `<div style="font-size:0.9rem; color:var(--muted);">Loại từ: <strong>${PART_OF_SPEECH[q.partOfSpeech] || q.partOfSpeech}</strong></div>`}`;
 
   let scoreBadgeHtml = '';
-  if (quizState.mode === 'quiz' || quizState.mode === 'listening') {
+  if (quizState.mode === 'quiz' || quizState.mode === 'listening' || quizState.mode === 'ai_quiz') {
     scoreBadgeHtml = `
       <div class="d-flex gap-2 align-items-center flex-wrap">
         <span class="badge bg-success-subtle text-success-emphasis d-inline-flex align-items-center gap-1"><i data-lucide="check" width="12" height="12"></i> ${quizState.score} đúng</span>
@@ -320,28 +625,112 @@ function renderQuestion() {
     `;
   }
 
-  html += `
-    <div class="mb-3">
-      <textarea id="answerInput" class="form-control" style="min-height:60px; resize:none;" placeholder="${isListening ? 'Gõ từ tiếng Anh bạn vừa nghe...' : (isEnVi ? 'Nhập từ/cụm tiếng Việt...' : 'Nhập từ tiếng Anh...')}"></textarea>
-      <div id="inputWarning" class="small text-danger mt-1" style="display:none;"><i data-lucide="alert-triangle" width="14" height="14"></i> Hãy nhập câu trả lời trước khi kiểm tra.</div>
-    </div>
-    <div class="d-flex gap-2">
-      <button id="submitBtn" class="btn btn-primary flex-fill d-flex align-items-center justify-content-center gap-2"><i data-lucide="check-circle" width="18" height="18"></i> Kiểm tra</button>
-    </div>
-    <div id="feedback"></div>
-  `;
+  if (isAI) {
+    html += `
+      <div class="row g-3 mb-3" id="aiOptionsContainer">
+        ${q.options.map((opt, idx) => `
+          <div class="col-sm-6">
+            <button class="btn btn-outline-primary w-100 ai-option-btn text-start p-3 fw-semibold border-2" data-index="${idx}" style="transition: all 0.2s ease; border-radius:14px; min-height:64px; line-height:1.35;">
+              ${opt}
+            </button>
+          </div>
+        `).join('')}
+      </div>
+      <div id="feedback"></div>
+    `;
+  } else {
+    html += `
+      <div class="mb-3">
+        <textarea id="answerInput" class="form-control" style="min-height:60px; resize:none;" placeholder="${isListening ? 'Gõ từ tiếng Anh bạn vừa nghe...' : (isEnVi ? 'Nhập từ/cụm tiếng Việt...' : 'Nhập từ tiếng Anh...')}"></textarea>
+        <div id="inputWarning" class="small text-danger mt-1" style="display:none;"><i data-lucide="alert-triangle" width="14" height="14"></i> Hãy nhập câu trả lời trước khi kiểm tra.</div>
+      </div>
+      <div class="d-flex gap-2">
+        <button id="submitBtn" class="btn btn-primary flex-fill d-flex align-items-center justify-content-center gap-2"><i data-lucide="check-circle" width="18" height="18"></i> Kiểm tra</button>
+      </div>
+      <div id="feedback"></div>
+    `;
+  }
 
   document.getElementById('practiceQuizContent').innerHTML = html;
   if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceQuizContent') });
 
-  document.getElementById('submitBtn').addEventListener('click', checkAnswer);
-  document.getElementById('speakBtn')?.addEventListener('click', () => speakWord(getEnglish(q)));
+  if (isAI) {
+    document.querySelectorAll('.ai-option-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const selectedIdx = parseInt(btn.dataset.index);
+        checkAIOption(selectedIdx);
+      });
+    });
+  } else {
+    document.getElementById('submitBtn').addEventListener('click', checkAnswer);
+    document.getElementById('speakBtn')?.addEventListener('click', () => speakWord(english));
 
-  if (isListening) {
-    setTimeout(() => speakWord(getEnglish(q)), 500);
+    if (isListening) {
+      setTimeout(() => speakWord(english), 500);
+    }
+
+    setTimeout(() => document.getElementById('answerInput').focus(), 100);
+  }
+}
+
+function checkAIOption(selectedIdx) {
+  if (quizState.finished) return;
+  
+  const q = quizState.questions[quizState.currentIndex];
+  const correct = selectedIdx === q.correctOptionIndex;
+  
+  // Disable all options immediately to prevent double clicking
+  document.querySelectorAll('.ai-option-btn').forEach(btn => {
+    btn.disabled = true;
+    const idx = parseInt(btn.dataset.index);
+    if (idx === q.correctOptionIndex) {
+      btn.className = 'btn btn-success w-100 ai-option-btn text-start p-3 fw-semibold border-2 text-white';
+    } else if (idx === selectedIdx) {
+      btn.className = 'btn btn-danger w-100 ai-option-btn text-start p-3 fw-semibold border-2 text-white';
+    } else {
+      btn.className = 'btn btn-outline-secondary w-100 ai-option-btn text-start p-3 fw-semibold border-2';
+      btn.style.opacity = '0.5';
+    }
+  });
+
+  if (correct) {
+    quizState.score++;
+    quizState.combo++;
+    if (quizState.combo > quizState.maxCombo) {
+      quizState.maxCombo = quizState.combo;
+    }
+    const points = 5 + (quizState.combo - 1) * 2;
+    quizState.points += points;
+    quizState.timer += 0.5; // Award time for correct answer
+    updateQuizTimer();
+  } else {
+    quizState.combo = 0;
+    quizState.timer -= 1.0; // Subtract time for wrong answer
+    if (quizState.timer < 0) quizState.timer = 0;
+    updateQuizTimer();
+    if (quizState.timer <= 0) {
+      endQuiz();
+      return;
+    }
   }
 
-  setTimeout(() => document.getElementById('answerInput').focus(), 100);
+  quizState.answers.push({
+    wordId: q.id,
+    english: q.english || getEnglish(q),
+    meaning: q.meaning,
+    direction: 'ai',
+    userAnswer: q.options[selectedIdx],
+    correct,
+    correctAnswers: q.options[q.correctOptionIndex]
+  });
+
+  let title = correct ? '<i data-lucide="check-circle" width="16" height="16"></i> Chính xác!' : '<i data-lucide="x-circle" width="16" height="16"></i> Sai rồi!';
+  const pointsAwarded = 5 + (quizState.combo - 1) * 2;
+  title += correct 
+    ? ` <span class="badge bg-warning text-dark ms-2" style="font-size:0.8rem; vertical-align:middle;">+${pointsAwarded}đ (Combo x${quizState.combo})</span>`
+    : ` <span class="badge bg-danger text-white ms-2" style="font-size:0.8rem; vertical-align:middle;">Mất combo</span>`;
+
+  showFeedback(correct ? 'success' : 'error', title, q.explanation);
 }
 
 function checkAnswer() {
@@ -441,12 +830,14 @@ function denormalizeText(text, isViet) {
 }
 
 function showFeedback(type, title, msg) {
+  if (quizState) quizState.paused = true;
+
   const submitBtn = document.getElementById('submitBtn');
   const skipBtn = document.getElementById('skipBtn');
   const answerInput = document.getElementById('answerInput');
   
-  answerInput.disabled = true;
-  submitBtn.disabled = true;
+  if (answerInput) answerInput.disabled = true;
+  if (submitBtn) submitBtn.disabled = true;
   if (skipBtn) skipBtn.disabled = true;
 
   const borderColor = type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--warning)';
@@ -474,12 +865,13 @@ function nextQuestion(answer) {
     renderQuestion();
   } else {
     quizState.currentIndex++;
+    if (quizState) quizState.paused = false;
     renderQuestion();
   }
 }
 
 function quizTick() {
-  if (!quizState || quizState.finished) return;
+  if (!quizState || quizState.finished || quizState.paused) return;
   quizState.timer--;
   updateQuizTimer();
   if (quizState.timer <= 0) {
@@ -535,7 +927,7 @@ async function showResults() {
         answers: quizState.answers,
         createdAt: serverTimestamp()
       };
-      if (quizState.mode === 'quiz' || quizState.mode === 'listening') {
+      if (quizState.mode === 'quiz' || quizState.mode === 'listening' || quizState.mode === 'ai_quiz') {
         attemptData.points = quizState.points || 0;
         attemptData.maxCombo = quizState.maxCombo || 0;
       }
@@ -586,7 +978,7 @@ async function showResults() {
   }
 
   let scoreDisplayHtml = '';
-  if (quizState.mode === 'quiz' || quizState.mode === 'listening') {
+  if (quizState.mode === 'quiz' || quizState.mode === 'listening' || quizState.mode === 'ai_quiz') {
     scoreDisplayHtml = `
       <div class="match-stats-grid mb-4">
         <div class="match-stat">
@@ -835,12 +1227,9 @@ function checkMatchPair() {
     const leftIdx = parseInt(leftEl.dataset.index);
     const rightIdx = parseInt(rightEl.dataset.index);
 
-    // Cập nhật trạng thái trong bộ nhớ thành 'matched' (để giữ ẩn mờ khi vẽ lại bảng)
+    // Cập nhật trạng thái trong bộ nhớ thành 'matched' (để giữ ẩn khi vẽ lại bảng)
     matchState.leftTiles[leftIdx].state = 'matched';
     matchState.rightTiles[rightIdx].state = 'matched';
-
-    // Lưu cặp chỉ số vừa ghép đúng vào bộ đệm pendingMatches
-    matchState.pendingMatches.push({ leftIdx, rightIdx });
 
     // Sau khi hiệu ứng nhấp nháy xanh lá (pop) chạy được 400ms, chuyển sang trạng thái ẩn mờ (matched)
     setTimeout(() => {
@@ -852,24 +1241,21 @@ function checkMatchPair() {
       b.disabled = true;
     }, 400);
 
-    // Giải phóng trạng thái lựa chọn để người dùng có thể thao tác tiếp cặp thứ 2 ngay lập tức
+    // Giải phóng trạng thái lựa chọn để người dùng có thể thao tác tiếp cặp khác ngay lập tức
     matchState.selected = [];
     matchState.locked = false;
 
-    // Nếu đã ghép đúng đủ 2 cặp, tiến hành thay thế và tự trộn lẫn nhau
-    if (matchState.pendingMatches.length === 2) {
-      matchState.locked = true; // Khóa bảng tạm thời để thực hiện thay thế
+    // Kiểm tra xem tất cả các ô hiện tại đã được ghép đúng chưa
+    const activeCount = matchState.leftTiles.filter(t => t.state === 'active' || t.state === 'spawning').length;
+    if (activeCount === 0) {
+      matchState.locked = true; // Khóa tạm thời để thực hiện hiệu ứng đổi lượt mới
       setTimeout(() => {
-        replacePendingPairs();
-      }, 600);
-    } else {
-      // Trường hợp đặc biệt: không còn thẻ hoạt động nào trên bảng và pool rỗng (kết thúc game)
-      const activeCount = matchState.leftTiles.filter(t => t.state === 'active' || t.state === 'spawning').length;
-      if (activeCount === 0) {
-        setTimeout(() => {
+        if (matchState.pool.length > 0) {
+          replaceEntireBoard();
+        } else {
           endMatchPairs();
-        }, 600);
-      }
+        }
+      }, 700); // Chờ 700ms để hiệu ứng biến mất của cặp cuối hoàn tất
     }
   } else {
     matchState.combo = 0;
@@ -895,74 +1281,21 @@ function checkMatchPair() {
   }
 }
 
-function replacePendingPairs() {
+function replaceEntireBoard() {
   if (matchState.finished) return;
 
-  const [pair1, pair2] = matchState.pendingMatches;
-  const leftIdx1 = pair1.leftIdx;
-  const rightIdx1 = pair1.rightIdx;
-  const leftIdx2 = pair2.leftIdx;
-  const rightIdx2 = pair2.rightIdx;
+  const nextCount = Math.min(MATCH_PAIRS_COUNT, matchState.pool.length);
+  const active = matchState.pool.slice(0, nextCount);
+  matchState.pool = matchState.pool.slice(nextCount);
 
-  if (matchState.pool.length >= 2) {
-    const wordA = matchState.pool.shift();
-    const wordB = matchState.pool.shift();
+  // Tạo và trộn lại hai cột cho lượt tiếp theo
+  matchState.leftTiles = shuffle(active.map(w => ({ id: w.id, text: getEnglish(w), state: 'spawning' })));
+  matchState.rightTiles = shuffle(active.map(w => ({ id: w.id, text: w.meaning, state: 'spawning' })));
 
-    // Tự trộn lẫn nhau giữa 2 thẻ mới nạp trước khi đưa vào slot cũ cột trái
-    const leftValues = shuffle([
-      { id: wordA.id, text: getEnglish(wordA), state: 'spawning' },
-      { id: wordB.id, text: getEnglish(wordB), state: 'spawning' }
-    ]);
-    // Tự trộn lẫn nhau giữa 2 thẻ mới nạp trước khi đưa vào slot cũ cột phải
-    const rightValues = shuffle([
-      { id: wordA.id, text: wordA.meaning, state: 'spawning' },
-      { id: wordB.id, text: wordB.meaning, state: 'spawning' }
-    ]);
-
-    matchState.leftTiles[leftIdx1] = leftValues[0];
-    matchState.leftTiles[leftIdx2] = leftValues[1];
-
-    matchState.rightTiles[rightIdx1] = rightValues[0];
-    matchState.rightTiles[rightIdx2] = rightValues[1];
-  } else if (matchState.pool.length === 1) {
-    const wordA = matchState.pool.shift();
-
-    // 1 từ mới và 1 slot rỗng, trộn lẫn nhau
-    const leftValues = shuffle([
-      { id: wordA.id, text: getEnglish(wordA), state: 'spawning' },
-      { state: 'empty' }
-    ]);
-    const rightValues = shuffle([
-      { id: wordA.id, text: wordA.meaning, state: 'spawning' },
-      { state: 'empty' }
-    ]);
-
-    matchState.leftTiles[leftIdx1] = leftValues[0];
-    matchState.leftTiles[leftIdx2] = leftValues[1];
-
-    matchState.rightTiles[rightIdx1] = rightValues[0];
-    matchState.rightTiles[rightIdx2] = rightValues[1];
-  } else {
-    // Rỗng hoàn toàn trong pool, đặt các slot đã ghép thành trống
-    matchState.leftTiles[leftIdx1] = { state: 'empty' };
-    matchState.leftTiles[leftIdx2] = { state: 'empty' };
-
-    matchState.rightTiles[rightIdx1] = { state: 'empty' };
-    matchState.rightTiles[rightIdx2] = { state: 'empty' };
-  }
-
-  // Xóa bộ đệm sau khi thay thế
-  matchState.pendingMatches = [];
   matchState.selected = [];
   matchState.locked = false;
 
-  // Kiểm tra xem tất cả các ô đã trống chưa để kết thúc game
-  const allEmpty = matchState.leftTiles.every(t => t.state === 'empty');
-  if (allEmpty) {
-    endMatchPairs();
-  } else {
-    renderMatchBoard();
-  }
+  renderMatchBoard();
 }
 
 // Giới hạn lịch sử lưu tối đa 10 lượt làm gần nhất trong Firestore

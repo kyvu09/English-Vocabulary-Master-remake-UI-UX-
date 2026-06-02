@@ -184,7 +184,13 @@ function loadHistory() {
             const scorePercent = d.scorePercent ?? d.percent ?? Math.round((correctAnswers / Math.max(totalQuestions, 1)) * 100);
             const scoreBadge = scorePercent >= 80 ? 'success' : scorePercent >= 60 ? 'warning' : 'danger';
             const direction = d.direction || d.directionMode;
-            const directionLabel = direction === 'en-vi' ? 'EN → VI' : direction === 'vi-en' ? 'VI → EN' : '<i data-lucide="arrow-left-right" width="14" height="14"></i> Cả hai';
+            const directionLabel = direction === 'en-vi'
+              ? 'EN → VI'
+              : direction === 'vi-en'
+                ? 'VI → EN'
+                : direction === 'ai'
+                  ? '<span class="text-info d-inline-flex align-items-center gap-1"><i data-lucide="sparkles" width="12" height="12"></i> Tạo bởi AI</span>'
+                  : '<i data-lucide="arrow-left-right" width="14" height="14"></i> Cả hai';
             
             // Xác định icon và nhãn hiển thị tương ứng với từng chế độ
             let modeIcon = '<i data-lucide="file-text" width="14" height="14"></i>';
@@ -195,6 +201,9 @@ function loadHistory() {
             } else if (d.mode === 'matchpairs') {
               modeIcon = '<i data-lucide="shuffle" width="14" height="14"></i>';
               modeLabel = 'Match Pairs';
+            } else if (d.mode === 'ai_quiz') {
+              modeIcon = '<i data-lucide="sparkles" width="14" height="14"></i>';
+              modeLabel = 'AI Quiz';
             }
 
             return `

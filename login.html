@@ -5,344 +5,991 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Đăng nhập - English Vocabulary Master</title>
   <link rel="icon" href="img/logo.jpg">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="./styles/variables.css" />
   <link rel="stylesheet" href="./styles/layout.css" />
   <link rel="stylesheet" href="./styles/components.css" />
   <link rel="stylesheet" href="./styles/bootstrap-theme.css" />
   <link rel="stylesheet" href="./style.css" />
   <style>
-    /* Modern Split-Screen Login Layout */
+    :root {
+      --login-blue: #1537e6;
+      --login-blue-2: #5f82ff;
+      --login-navy: #06216f;
+      --login-ink: #063c6f;
+      --login-soft: #e7ecff;
+      --login-panel: #ffffff;
+      --login-line: #c7ccd8;
+      --login-muted: #747b8d;
+      --login-coral: #ff4e6e;
+
+      --login-page-bg: #bfc5ff;
+      --visual-grad-1: rgba(8, 24, 135, 0.96);
+      --visual-grad-2: rgba(36, 69, 225, 0.72);
+      --visual-grad-3: #c6cbff;
+      --visual-grad-4: #aeb7ff;
+      --visual-shape-bg: rgba(10, 23, 140, 0.98);
+    }
+
+    [data-theme="dark"] {
+      --login-blue: #5f82ff;
+      --login-blue-2: #2563eb;
+      --login-navy: #a5b4fc;
+      --login-ink: #f8fafc;
+      --login-soft: #1e293b;
+      --login-panel: #0f172a;
+      --login-line: #334155;
+      --login-muted: #94a3b8;
+      --login-coral: #fda4af;
+
+      --login-page-bg: #0b0f19;
+      --visual-grad-1: rgba(15, 23, 42, 0.98);
+      --visual-grad-2: rgba(30, 41, 59, 0.8);
+      --visual-grad-3: #1e1b4b;
+      --visual-grad-4: #312e81;
+      --visual-shape-bg: rgba(15, 23, 42, 0.98);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body.login-page {
+      min-height: 100vh;
       margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      background: var(--bg);
-      display: flex;
-      font-family: 'Inter', sans-serif;
-    }
-
-    .login-split {
-      display: flex;
-      width: 100%;
-      min-height: 100vh;
-    }
-
-    .login-brand-side {
-      flex: 1.2;
-      background: linear-gradient(135deg, var(--primary), var(--primary-2));
-      color: white;
-      padding: var(--space-3xl);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .login-brand-side::before {
-      content: "";
-      position: absolute;
-      top: -10%;
-      left: -10%;
-      width: 50vw;
-      height: 50vw;
-      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
-      border-radius: 50%;
-      z-index: 0;
-    }
-
-    .login-brand-content {
-      position: relative;
-      z-index: 1;
-      max-width: 600px;
-    }
-
-    .login-brand-content h1 {
-      font-size: clamp(2.5rem, 4vw, 3.5rem);
-      line-height: 1.1;
-      margin-bottom: var(--space-lg);
-      font-weight: 800;
-    }
-
-    .login-brand-content p {
-      font-size: 1.1rem;
-      line-height: 1.6;
-      opacity: 0.9;
-      margin-bottom: var(--space-2xl);
-    }
-
-    .login-features {
       display: grid;
-      gap: var(--space-lg);
+      place-items: center;
+      padding: 44px;
+      overflow-x: hidden;
+      color: var(--login-ink);
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      position: relative;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    body.login-page::before,
+    body.login-page::after {
+      content: "";
+      position: fixed;
+      z-index: 0;
+      pointer-events: none;
+      background: var(--login-blue-2);
+      transition: background-color 0.25s ease;
+    }
+
+    body.login-page::before {
+      width: 420px;
+      height: 210px;
+      top: -118px;
+      left: 12%;
+      border-radius: 0 0 220px 220px;
+      transform: rotate(18deg);
+    }
+
+    body.login-page::after {
+      width: 360px;
+      height: 190px;
+      right: -160px;
+      bottom: 70px;
+      border-radius: 210px 0 0 210px;
+      transform: rotate(14deg);
+    }
+
+    .login-ribbon {
+      position: fixed;
+      z-index: 0;
+      pointer-events: none;
+      background: var(--login-blue-2);
+      transition: background-color 0.25s ease;
+    }
+
+    .login-ribbon.left {
+      width: 360px;
+      height: 160px;
+      left: -210px;
+      bottom: 24%;
+      border-radius: 0 170px 170px 0;
+    }
+
+    .login-ribbon.right {
+      width: 340px;
+      height: 170px;
+      right: -205px;
+      top: 18%;
+      border-radius: 170px 0 0 170px;
+    }
+
+    .login-stage {
+      width: min(1160px, calc(100vw - 120px));
+      min-height: min(700px, calc(100vh - 120px));
       position: relative;
       z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(320px, 1.1fr) minmax(320px, 0.9fr);
+      align-items: center;
+      gap: 48px;
+      padding: 40px 60px;
+      background: var(--login-panel);
+      border: 1px solid var(--login-line);
+      border-radius: 4px;
+      box-shadow: 0 24px 58px rgba(25, 31, 52, 0.18);
+      overflow: hidden;
+      transition: background-color 0.25s ease, border-color 0.25s ease;
     }
 
-    .login-feature-item {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: var(--space-lg);
-      border-radius: var(--radius);
+    .login-visual {
+      min-width: 0;
+      display: grid;
+      align-items: end;
+      justify-items: center;
+      position: relative;
     }
 
-    .login-feature-item h3 {
-      margin: 0 0 var(--space-xs);
-      font-size: 1.1rem;
+    .security-art {
+      width: min(100%, 700px);
+      height: min(100%, 700px);
+      display: block;
     }
 
-    .login-feature-item p {
-      margin: 0;
-      font-size: 0.95rem;
-      opacity: 0.85;
+    .auth-card {
+      width: min(100%, 520px);
+      justify-self: center;
+      display: grid;
+      gap: 22px;
     }
 
-    .login-form-side {
-      flex: 1;
-      background: var(--surface-strong);
-      display: flex;
+    .brand-mark {
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: var(--space-2xl);
-      position: relative;
+      gap: 10px;
+      color: var(--login-ink);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
     }
 
-    .login-form-container {
-      width: 100%;
-      max-width: 440px;
+    .brand-mark img {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 8px 16px rgba(21, 55, 230, 0.16);
     }
 
     .auth-tabs {
       display: flex;
-      gap: var(--space-sm);
-      margin-bottom: var(--space-2xl);
-      background: var(--surface-soft);
+      justify-content: center;
+      gap: 8px;
+      width: fit-content;
+      margin: 0 auto 4px;
       padding: 6px;
+      border: 1px solid var(--login-line);
       border-radius: 999px;
-      border: 1px solid var(--line-soft);
+      background: var(--login-soft);
+      transition: background-color 0.25s ease, border-color 0.25s ease;
     }
 
-    .auth-tab {
-      flex: 1;
-      padding: 12px;
+    .auth-tabs .auth-tab {
+      border: 0;
       border-radius: 999px;
-      border: none;
+      min-width: 112px;
+      padding: 10px 16px;
       background: transparent;
-      font-weight: 600;
-      color: var(--muted);
+      color: var(--login-muted);
+      font-weight: 800;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
     }
 
-    .auth-tab.active {
-      background: white;
-      color: var(--primary);
-      box-shadow: var(--shadow-sm);
+    .auth-tabs .auth-tab.active {
+      color: #ffffff;
+      background: var(--login-blue);
+      box-shadow: 0 9px 18px rgba(21, 55, 230, 0.22);
     }
 
     .auth-panel {
       display: none;
-      animation: fadeIn 0.3s ease;
     }
 
     .auth-panel.active {
       display: block;
+      animation: authPanelIn 0.22s ease both;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes authPanelIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
-    /* Use Bootstrap form-control styling with our theme */
-    .login-form-container h2 {
-      font-size: 1.8rem;
-      margin: 0 0 var(--space-xs);
+    .auth-heading {
+      margin: 0 0 34px;
+      text-align: center;
     }
 
-    .login-form-container .sub {
-      color: var(--muted);
-      margin-bottom: var(--space-2xl);
+    .auth-heading h1,
+    .auth-heading h2 {
+      margin: 0;
+      color: var(--login-ink);
+      font-size: 2.2rem;
+      line-height: 1.15;
+      font-weight: 850;
+      letter-spacing: 0.12em;
+    }
+
+    .auth-heading p {
+      margin: 12px auto 0;
+      max-width: 380px;
+      color: var(--login-muted);
+      line-height: 1.55;
+      font-size: 0.95rem;
+    }
+
+    .mobile-title {
+      display: none;
+    }
+
+    .auth-form {
+      display: grid;
+      gap: 22px;
+    }
+
+    .login-field {
+      position: relative;
+    }
+
+    .field-caption {
+      display: none;
+    }
+
+    .login-field input {
+      width: 100%;
+      min-height: 64px;
+      border: 0;
+      border-radius: 999px;
+      outline: none;
+      background: var(--login-soft);
+      color: var(--login-ink);
+      text-align: center;
+      padding: 0 28px;
+      font-size: 1rem;
+      font-weight: 700;
+      box-shadow: inset 0 0 0 2px var(--login-line);
+      transition: box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .login-field input::placeholder {
+      color: var(--login-muted);
+      opacity: 0.7;
+      letter-spacing: 0.22em;
+      font-weight: 600;
+    }
+
+    .login-field input:focus {
+      background: var(--login-soft);
+      box-shadow: inset 0 0 0 2px var(--login-blue), 0 0 0 5px rgba(21, 55, 230, 0.15);
+    }
+
+    body.login-page input:disabled,
+    body.login-page button:disabled {
+      opacity: 1;
+      cursor: not-allowed;
+    }
+
+    body.login-page input:disabled {
+      -webkit-text-fill-color: var(--login-ink);
+    }
+
+    .form-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      color: var(--login-ink);
+      font-size: 0.94rem;
+      font-weight: 700;
+    }
+
+    .checkline {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      cursor: pointer;
+      color: var(--login-ink);
+    }
+
+    .checkline input {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      border: 2px solid var(--login-line);
+      border-radius: 3px;
+      display: grid;
+      place-items: center;
+      background: var(--login-panel);
+      flex: 0 0 auto;
+      cursor: pointer;
+      transition: background-color 0.18s ease, border-color 0.18s ease;
+    }
+
+    .checkline input:checked {
+      border-color: var(--login-blue);
+      background: var(--login-blue);
+    }
+
+    .checkline input:checked::after {
+      content: "";
+      width: 8px;
+      height: 5px;
+      border-left: 2px solid #ffffff;
+      border-bottom: 2px solid #ffffff;
+      transform: rotate(-45deg) translateY(-1px);
+    }
+
+    .forgot-link,
+    .form-link,
+    .auth-inline-link {
+      border: 0;
+      padding: 0;
+      background: transparent;
+      color: var(--login-blue);
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .auth-inline-link.auth-tab,
+    .auth-inline-link.auth-tab.active {
+      min-width: 0;
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+      color: var(--login-blue);
+    }
+
+    .forgot-link:hover,
+    .form-link:hover,
+    .auth-inline-link:hover {
+      text-decoration: underline;
+    }
+
+    .primary-action,
+    .secondary-action {
+      width: 100%;
+      min-height: 66px;
+      border-radius: 999px;
+      border: 0;
+      cursor: pointer;
+      font-size: 1.05rem;
+      font-weight: 900;
+      letter-spacing: 0.2em;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+    }
+
+    .primary-action {
+      color: #ffffff;
+      background: #6184ff;
+      box-shadow: 0 16px 28px rgba(21, 55, 230, 0.22);
+    }
+
+    .primary-action:hover {
+      transform: translateY(-1px);
+      background: var(--login-blue);
+      box-shadow: 0 18px 34px rgba(21, 55, 230, 0.3);
+    }
+
+    .secondary-action {
+      color: var(--login-blue);
+      background: var(--login-panel);
+      border: 2px solid var(--login-line);
+      letter-spacing: 0;
+    }
+
+    .action-arrow {
+      letter-spacing: 0;
+      margin-left: 8px;
     }
 
     .divider {
       display: flex;
       align-items: center;
-      text-align: center;
-      margin: var(--space-xl) 0;
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-    
-    .divider::before,
-    .divider::after {
-      content: '';
-      flex: 1;
-      border-bottom: 1px solid var(--line-soft);
-    }
-    
-    .divider:not(:empty)::before {
-      margin-right: .5em;
-    }
-    
-    .divider:not(:empty)::after {
-      margin-left: .5em;
+      gap: 14px;
+      color: var(--login-muted);
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin-top: 4px;
+      white-space: nowrap;
     }
 
-    /* Responsive */
-    @media (max-width: 992px) {
-      .login-split {
-        flex-direction: column;
+    .divider::before,
+    .divider::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: var(--login-line);
+    }
+
+    .social-login-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    .social-btn {
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--login-line);
+      border-radius: 999px;
+      background: var(--login-panel);
+      cursor: pointer;
+      box-shadow: 0 6px 14px rgba(16, 32, 78, 0.08);
+      transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.25s ease;
+    }
+
+    .social-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(16, 32, 78, 0.12);
+    }
+
+    .auth-footnote {
+      margin-top: 24px;
+      color: var(--login-muted);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .status {
+      display: none;
+      padding: 13px 16px;
+      border-radius: 14px;
+      line-height: 1.45;
+      font-size: 0.92rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status.success {
+      color: #15803d;
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+
+    .status.error,
+    .status.danger {
+      color: #dc2626;
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+
+    .status.warning {
+      color: #b45309;
+      background: #fff7ed;
+      border-color: #fed7aa;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 1120px) {
+      body.login-page {
+        padding: 26px;
+        background: var(--login-page-bg);
       }
-      
-      .login-brand-side {
-        padding: var(--space-2xl) var(--space-xl);
+
+      body.login-page::before,
+      body.login-page::after,
+      .login-ribbon {
+        display: none;
       }
-      
-      .login-features {
-        display: none; /* Hide features on mobile to save space */
+
+      .login-stage {
+        width: min(500px, 100%);
+        min-height: 0;
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 28px;
+        box-shadow: 0 22px 34px rgba(6, 33, 111, 0.32);
+        background: var(--login-panel);
+        overflow: hidden;
       }
-      
-      .login-form-side {
-        padding: var(--space-2xl) var(--space-xl);
-        background: var(--bg);
+
+      .login-visual {
+        min-height: 260px;
+        padding: 26px 28px 0;
+        align-items: start;
+        background:
+          linear-gradient(145deg, var(--visual-grad-1) 0 44%, transparent 44%),
+          linear-gradient(114deg, transparent 0 35%, var(--visual-grad-2) 35% 68%, transparent 68%),
+          linear-gradient(160deg, var(--visual-grad-3) 0%, var(--visual-grad-4) 100%);
       }
-      
-      .login-form-container {
-        background: var(--surface-strong);
-        padding: var(--space-2xl);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
+
+      .login-visual::before,
+      .login-visual::after {
+        content: "";
+        position: absolute;
+        pointer-events: none;
+        background: var(--visual-shape-bg);
+      }
+
+      .login-visual::before {
+        width: 170px;
+        height: 300px;
+        right: 0;
+        top: 0;
+        border-radius: 0 0 0 86px;
+      }
+
+      .login-visual::after {
+        width: 260px;
+        height: 170px;
+        left: -74px;
+        bottom: -36px;
+        border-radius: 0 120px 80px 0;
+      }
+
+      .security-art {
+        width: min(420px, 96%);
+        position: relative;
+        z-index: 1;
+        margin: 0 auto;
+        transform: translateY(4px);
+      }
+
+      .security-art .desktop-only-art {
+        display: none;
+      }
+
+      .auth-card {
+        width: 100%;
+        padding: 34px 32px 30px;
+        border-radius: 28px 28px 0 0;
+        margin-top: -22px;
+        position: relative;
+        z-index: 2;
+        background: var(--login-panel);
+      }
+
+      .brand-mark {
+        display: none;
+      }
+
+      .auth-tabs {
+        margin-bottom: 2px;
+      }
+
+      .auth-heading {
+        margin-bottom: 26px;
+      }
+
+      .auth-heading h1,
+      .auth-heading h2 {
+        color: var(--login-blue);
+        font-size: 2rem;
+        letter-spacing: 0;
+      }
+
+      .desktop-title {
+        display: none;
+      }
+
+      .mobile-title {
+        display: inline;
+      }
+
+      .auth-heading p {
+        display: none;
+      }
+
+      .auth-form {
+        gap: 18px;
+      }
+
+      .field-caption {
+        display: inline-block;
+        position: absolute;
+        left: 22px;
+        top: -9px;
+        z-index: 1;
+        padding: 0 7px;
+        background: var(--login-panel);
+        color: var(--login-ink);
+        font-size: 0.88rem;
+      }
+
+      .login-field input {
+        min-height: 55px;
+        padding: 0 18px;
+        border: 1.5px solid var(--login-line);
+        border-radius: 15px;
+        background: var(--login-soft);
+        box-shadow: none;
+        color: var(--login-ink);
+        text-align: left;
+        font-weight: 600;
+      }
+
+      .login-field input::placeholder {
+        color: var(--login-muted);
+        opacity: 1;
+        letter-spacing: 0;
+        font-weight: 600;
+      }
+
+      .login-field input:focus {
+        background: var(--login-soft);
+        box-shadow: 0 0 0 4px rgba(21, 55, 230, 0.15);
+      }
+
+      .form-row {
+        font-size: 0.9rem;
+        color: var(--login-ink);
+      }
+
+      .checkline {
+        color: var(--login-ink);
+      }
+
+      .checkline input {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid var(--login-blue);
+        background: var(--login-soft);
+      }
+
+      .primary-action {
+        min-height: 62px;
+        border-radius: 12px;
+        background: var(--login-blue);
+        letter-spacing: 0;
+      }
+
+      .desktop-action {
+        display: none;
+      }
+
+      .divider {
+        margin-top: 6px;
+        font-weight: 600;
+        text-transform: lowercase;
+      }
+    }
+
+    @media (max-width: 540px) {
+      body.login-page {
+        padding: 0;
+        align-items: start;
+        min-height: 100dvh;
+      }
+
+      .login-stage {
+        width: 100%;
+        min-height: 100dvh;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .login-visual {
+        min-height: 248px;
+      }
+
+      .auth-card {
+        padding: 30px 24px 28px;
+      }
+
+      .auth-card > *,
+      .auth-form {
+        width: 342px;
+        max-width: calc(100% - 48px);
+        justify-self: center;
+        min-width: 0;
+      }
+
+      .auth-tabs {
+        width: 100%;
+      }
+
+      .auth-tabs .auth-tab {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .auth-heading h1,
+      .auth-heading h2 {
+        font-size: 1.9rem;
+      }
+
+      .form-row {
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 0.86rem;
+      }
+
+      .forgot-link {
+        white-space: nowrap;
+      }
+
+      .divider {
+        gap: 10px;
+        font-size: 0.86rem;
+      }
+
+      .social-login-row {
+        gap: 20px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .forgot-link {
+        font-size: 0;
+      }
+
+      .forgot-link::after {
+        content: "Forgot?";
+        font-size: 0.86rem;
       }
     }
   </style>
 </head>
 <body class="login-page">
-  <div class="login-split">
-    <!-- Brand / Hero Side -->
-    <div class="login-brand-side">
-      <div class="login-brand-content">
-        <span class="badge" style="background: rgba(255,255,255,0.2); color: white; border: none; margin-bottom: 16px;">Welcome back</span>
-        <h1>English Vocabulary Master</h1>
-        <p>Bạn có biết sự khác biệt giữa <strong>"0%"</strong> và <strong>"0.01%"</strong> mỗi ngày là gì không? Đó chính là ranh giới giữa <strong>"không thể"</strong> và <strong>"có thể"</strong>.</p>
+  <span class="login-ribbon left" aria-hidden="true"></span>
+  <span class="login-ribbon right" aria-hidden="true"></span>
+
+  <main class="login-stage" aria-labelledby="loginTitle">
+    <section class="login-visual" aria-hidden="true">
+      <svg class="security-art" viewBox="0 0 760 560" role="img" aria-label="Secure login illustration">
+        <defs>
+          <linearGradient id="lockBody" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0" stop-color="#6d8cff"/>
+            <stop offset="1" stop-color="#4b70f8"/>
+          </linearGradient>
+          <linearGradient id="keyPink" x1="0" x2="1">
+            <stop offset="0" stop-color="#ff526f"/>
+            <stop offset="1" stop-color="#ff4165"/>
+          </linearGradient>
+        </defs>
+        <path d="M68 520c-36-129 22-310 130-310 58 0 105 38 169 31 70-8 94-56 154-23 64 35 59 112 58 174 49-27 81-10 87 33 8 60-48 95-82 95H68z" fill="#e4e9fb"/>
+        <path class="desktop-only-art" d="M278 338V240c0-84 67-151 151-151s151 67 151 151v98h-58v-98c0-52-41-93-93-93s-93 41-93 93v98h-58z" fill="#005c9d"/>
+        <path d="M249 302h338c18 0 32 14 32 32v159c-88 30-224 42-402 36V334c0-18 14-32 32-32z" fill="url(#lockBody)"/>
+        <path d="M217 480c123 8 264 1 402-39v54c0 18-14 32-32 32H249c-18 0-32-14-32-32v-15z" fill="#5478f6"/>
+        <path d="M414 400c0-24 20-43 43-43s43 19 43 43c0 16-9 30-23 37v44h-41v-44c-13-7-22-21-22-37z" fill="#005c9d"/>
+        <path d="M177 99h238" stroke="url(#keyPink)" stroke-width="32" stroke-linecap="round"/>
+        <path d="M179 99v33M219 99v33M259 99v33" stroke="url(#keyPink)" stroke-width="18" stroke-linecap="round"/>
+        <circle cx="473" cy="99" r="52" fill="url(#keyPink)"/>
+        <circle cx="499" cy="85" r="14" fill="#fff"/>
+        <g class="desktop-only-art">
+          <path d="M102 389h255" stroke="#005c9d" stroke-width="13"/>
+          <path d="M144 389v137M330 389v137" stroke="#005c9d" stroke-width="8"/>
+          <path d="M143 317c-18 10-29 34-30 69l73 1c3-38-12-63-43-70z" fill="#5478f6"/>
+          <path d="M178 296c14 16 22 39 12 57-9 16-34 12-49 1-16-12-9-50 10-61 9-5 19-5 27 3z" fill="#ffcd82"/>
+          <path d="M158 292c11 23 33 18 46 36 10-36-6-76-35-76-45 0-58 54-46 99 12-6 19-21 22-41 2-12 6-18 13-18z" fill="#005c9d"/>
+          <path d="M125 351c37 13 61 10 74 0l11 85H118l7-85z" fill="#ff526f"/>
+          <path d="M132 419c48 1 87 25 112 70l-29 19-86-62 3-27z" fill="#005c9d"/>
+          <path d="M172 418c38 14 71 45 99 91l-28 18-102-75 31-34z" fill="#0f5aa0"/>
+          <path d="M245 502l27 22-20 16-24-23 17-15zM190 500l20 29-22 14-18-31 20-12z" fill="#ff526f"/>
+          <rect x="235" y="345" width="88" height="54" rx="4" fill="#f4fbff"/>
+          <path d="M251 399h-86" stroke="#ffcd82" stroke-width="10" stroke-linecap="round"/>
+          <path d="M282 374c7-5 14-5 21 0-2 12-17 13-21 0z" fill="#d9e7ef"/>
+          <path d="M616 412c34 39 39 80 15 122M653 360c-5 75-26 126-62 153M682 432c-36 15-64 39-84 72" stroke="#d8e3ff" stroke-width="9" stroke-linecap="round"/>
+          <path d="M632 465c24-16 40-12 50 10-22 11-38 8-50-10zM645 394c24 4 35 18 32 42-26-5-37-19-32-42zM591 458c-26-2-42 8-50 30 26 9 43-1 50-30z" fill="#5d7eff"/>
+          <path d="M590 505c41-5 69 6 84 34H532c9-19 28-30 58-34z" fill="#005c9d"/>
+          <circle cx="592" cy="365" r="18" fill="#ffcd82"/>
+          <path d="M566 386c33-21 65-17 90 14l-35 70h-78l23-84z" fill="#ff526f"/>
+          <path d="M555 464c37 23 78 22 121-3-1 28-26 52-62 58-40 6-65-14-59-55z" fill="#005c9d"/>
+        </g>
+        <rect x="92" y="80" width="34" height="34" rx="4" fill="none" stroke="#dfe7ff" stroke-width="6"/>
+        <rect x="112" y="96" width="34" height="34" rx="4" fill="none" stroke="#dfe7ff" stroke-width="6"/>
+        <rect x="654" y="250" width="34" height="34" rx="4" fill="none" stroke="#dfe7ff" stroke-width="6"/>
+        <rect x="674" y="236" width="34" height="34" rx="4" fill="none" stroke="#dfe7ff" stroke-width="6"/>
+        <path d="M197 48l15 15-15 15-15-15zM602 56l15 15-15 15-15-15zM66 331l15 15-15 15-15-15z" fill="none" stroke="#e5ecff" stroke-width="5"/>
+        <circle cx="355" cy="49" r="7" fill="#e5ecff"/>
+        <circle cx="691" cy="363" r="7" fill="#dcd5f0"/>
+        <circle cx="143" cy="236" r="6" fill="#fff"/>
+      </svg>
+    </section>
+
+    <section class="auth-card">
+      <span id="authStateText" class="sr-only">Chưa đăng nhập</span>
+      <div class="brand-mark">
+        <img src="img/logo.jpg" alt="" />
+        <span>English Vocabulary</span>
       </div>
 
-      <div class="login-features">
-        <div class="login-feature-item">
-          <h3 class="d-flex align-items-center gap-2"><i data-lucide="target"></i> Quản lý buổi học</h3>
-          <p>Tạo từng buổi học rõ ràng, sắp xếp và gán từ vựng vào đúng buổi cần học.</p>
-        </div>
-        <div class="login-feature-item">
-          <h3 class="d-flex align-items-center gap-2"><i data-lucide="bot"></i> Gợi ý tự động (AI)</h3>
-          <p>Tự động tra phiên âm, từ loại và nghĩa thông dụng khi bạn nhập từ tiếng Anh.</p>
-        </div>
-        <div class="login-feature-item">
-          <h3 class="d-flex align-items-center gap-2"><i data-lucide="gamepad-2"></i> Luyện tập đa chế độ</h3>
-          <p>Ôn luyện dễ dàng và toàn diện qua các chế độ: Spelling, Listening và Sentence.</p>
-        </div>
+      <div class="auth-tabs" id="authTabsContainer" aria-label="Chọn hình thức xác thực">
+        <button class="auth-tab active" type="button" data-auth-tab="login">Sign in</button>
+        <button class="auth-tab" type="button" data-auth-tab="register">Sign up</button>
       </div>
-    </div>
 
-    <!-- Form Side -->
-    <div class="login-form-side">
-      <div class="login-form-container">
-        <h2>Học cùng kyvu</h2>
-        <div class="sub">Sử dụng email hoặc tài khoản Google để tiếp tục.</div>
+      <div id="authMessage" class="status" aria-live="polite"></div>
 
-        <div class="auth-tabs" id="authTabsContainer">
-          <button class="auth-tab active" type="button" data-auth-tab="login">Đăng nhập</button>
-          <button class="auth-tab" type="button" data-auth-tab="register">Đăng ký</button>
+      <div id="loginPanel" class="auth-panel active">
+        <div class="auth-heading">
+          <h1 id="loginTitle">
+            <span class="desktop-title">User Login</span>
+            <span class="mobile-title">Welcome Back</span>
+          </h1>
+          <p>Enter your account details to continue learning English.</p>
         </div>
 
-        <div id="authMessage" class="status" aria-live="polite"></div>
+        <form id="loginForm" class="auth-form">
+          <div class="login-field">
+            <label class="field-caption" for="loginEmail">Email</label>
+            <input id="loginEmail" type="email" placeholder="Email" autocomplete="email" required />
+          </div>
 
-        <!-- PANEL ĐĂNG NHẬP -->
-        <div id="loginPanel" class="auth-panel active">
-          <form id="loginForm">
-            <div class="mb-3">
-              <label class="form-label fw-semibold" for="loginEmail">Email của bạn</label>
-              <input id="loginEmail" class="form-control" type="email" placeholder="email@example.com" required />
-            </div>
-            <div class="mb-3">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <label class="form-label fw-semibold mb-0" for="loginPassword">Mật khẩu</label>
-                <a href="#" id="btnShowForgotPassword" class="text-decoration-none small fw-medium" style="color: var(--primary);">Quên mật khẩu?</a>
-              </div>
-              <input id="loginPassword" class="form-control" type="password" placeholder="••••••••" required />
-            </div>
-            
-            <button class="btn btn-primary w-100" type="submit">Đăng nhập</button>
-            
-            <div class="divider">HOẶC</div>
+          <div class="login-field">
+            <label class="field-caption" for="loginPassword">Password</label>
+            <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password" required />
+          </div>
 
-            <button class="btn btn-google w-100 d-flex align-items-center justify-content-center gap-2" type="button" id="googleLoginBtn">
-              <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-              Đăng nhập bằng Google
+          <div class="form-row">
+            <label class="checkline" for="rememberMe">
+              <input type="checkbox" id="rememberMe" />
+              <span>Remember me</span>
+            </label>
+            <a href="#" id="btnShowForgotPassword" class="forgot-link">Forgot Password?</a>
+          </div>
+
+          <button class="primary-action" type="submit">Sign in <span class="action-arrow">→</span></button>
+
+          <div class="divider">sign in with</div>
+
+          <div class="social-login-row">
+            <button class="social-btn" type="button" id="googleLoginBtn" aria-label="Đăng nhập bằng Google">
+              <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
             </button>
-          </form>
-        </div>
-
-        <!-- PANEL ĐĂNG KÝ -->
-        <div id="registerPanel" class="auth-panel">
-          <form id="registerForm">
-            <div class="mb-3">
-              <label class="form-label fw-semibold" for="registerName">Tên hiển thị</label>
-              <input id="registerName" class="form-control" type="text" placeholder="Ví dụ: Nguyễn Văn A" />
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold" for="registerEmail">Email của bạn</label>
-              <input id="registerEmail" class="form-control" type="email" placeholder="email@example.com" required />
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold" for="registerPassword">Mật khẩu (Tối thiểu 6 ký tự)</label>
-              <input id="registerPassword" class="form-control" type="password" placeholder="••••••••" required />
-            </div>
-            
-            <button class="btn btn-primary w-100" type="submit">Tạo tài khoản</button>
-            
-            <div class="divider">HOẶC</div>
-
-            <button class="btn btn-google w-100 d-flex align-items-center justify-content-center gap-2" type="button" id="googleRegisterBtn">
-              <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-              Đăng ký bằng Google
+            <button class="social-btn" type="button" aria-label="Facebook">
+              <svg width="22" height="22" fill="#1877F2" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M24 12.073C24 5.446 18.627.073 12 .073S0 5.446 0 12.073c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
             </button>
-          </form>
-        </div>
+            <button class="social-btn" type="button" aria-label="Twitter">
+              <svg width="22" height="22" fill="#1DA1F2" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M23.953 4.57a10 10 0 0 1-2.825.775 4.958 4.958 0 0 0 2.163-2.723c-.951.555-2.005.959-3.127 1.184A4.92 4.92 0 0 0 11.78 8.29C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 0 0-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 0 1-2.228-.616v.06a4.923 4.923 0 0 0 3.946 4.827 4.996 4.996 0 0 1-2.212.085 4.936 4.936 0 0 0 4.604 3.417A9.867 9.867 0 0 1 1.17 19.61c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 0 0 7.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0 0 24 4.59z"/>
+              </svg>
+            </button>
+          </div>
 
-        <!-- PANEL QUÊN MẬT KHẨU -->
-        <div id="forgotPasswordPanel" class="auth-panel">
-          <form id="forgotPasswordForm">
-            <p class="text-muted small mb-3" style="line-height: 1.5;">Nhập email của bạn, chúng tôi sẽ gửi một liên kết để đặt lại mật khẩu.</p>
-            <div class="mb-3">
-              <label class="form-label fw-semibold" for="forgotEmail">Email khôi phục</label>
-              <input id="forgotEmail" class="form-control" type="email" placeholder="email@example.com" required />
-            </div>
-            <div class="d-flex flex-column gap-2 mt-4">
-              <button class="btn btn-primary w-100" type="submit">Gửi liên kết đặt lại</button>
-              <button class="btn btn-outline-secondary w-100" type="button" id="btnBackToLogin">Quay lại đăng nhập</button>
-            </div>
-          </form>
-        </div>
-
+          <p class="auth-footnote">Don't have an account? <button class="auth-inline-link auth-tab" type="button" data-auth-tab="register">Sign up</button></p>
+        </form>
       </div>
-    </div>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+      <div id="registerPanel" class="auth-panel">
+        <div class="auth-heading">
+          <h2>Get Started</h2>
+          <p>Create your account and keep your vocabulary progress synced.</p>
+        </div>
+
+        <form id="registerForm" class="auth-form">
+          <div class="login-field">
+            <label class="field-caption" for="registerName">Full Name</label>
+            <input id="registerName" type="text" placeholder="Full Name" autocomplete="name" />
+          </div>
+
+          <div class="login-field">
+            <label class="field-caption" for="registerEmail">Email</label>
+            <input id="registerEmail" type="email" placeholder="Email" autocomplete="email" required />
+          </div>
+
+          <div class="login-field">
+            <label class="field-caption" for="registerPassword">Password</label>
+            <input id="registerPassword" type="password" placeholder="Password" autocomplete="new-password" required />
+          </div>
+
+          <label class="checkline" for="agreeTerms">
+            <input type="checkbox" id="agreeTerms" required checked />
+            <span>I agree to the processing of <a href="#" class="form-link">personal data</a></span>
+          </label>
+
+          <button class="primary-action" type="submit">Sign up <span class="action-arrow">→</span></button>
+
+          <div class="divider">sign up with</div>
+
+          <div class="social-login-row">
+            <button class="social-btn" type="button" id="googleRegisterBtn" aria-label="Đăng ký bằng Google">
+              <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+            </button>
+            <button class="social-btn" type="button" aria-label="Facebook">
+              <svg width="22" height="22" fill="#1877F2" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M24 12.073C24 5.446 18.627.073 12 .073S0 5.446 0 12.073c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+            </button>
+            <button class="social-btn" type="button" aria-label="Twitter">
+              <svg width="22" height="22" fill="#1DA1F2" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M23.953 4.57a10 10 0 0 1-2.825.775 4.958 4.958 0 0 0 2.163-2.723c-.951.555-2.005.959-3.127 1.184A4.92 4.92 0 0 0 11.78 8.29C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 0 0-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 0 1-2.228-.616v.06a4.923 4.923 0 0 0 3.946 4.827 4.996 4.996 0 0 1-2.212.085 4.936 4.936 0 0 0 4.604 3.417A9.867 9.867 0 0 1 1.17 19.61c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 0 0 7.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0 0 24 4.59z"/>
+              </svg>
+            </button>
+          </div>
+
+          <p class="auth-footnote">Already have an account? <button class="auth-inline-link auth-tab" type="button" data-auth-tab="login">Sign in</button></p>
+        </form>
+      </div>
+
+      <div id="forgotPasswordPanel" class="auth-panel">
+        <div class="auth-heading">
+          <h2>Reset Password</h2>
+          <p>Enter your email and we will send a password reset link.</p>
+        </div>
+
+        <form id="forgotPasswordForm" class="auth-form">
+          <div class="login-field">
+            <label class="field-caption" for="forgotEmail">Email</label>
+            <input id="forgotEmail" type="email" placeholder="Email" autocomplete="email" required />
+          </div>
+
+          <button class="primary-action" type="submit">Send link <span class="action-arrow">→</span></button>
+          <button class="secondary-action" type="button" id="btnBackToLogin">Back to sign in</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
   <script src="env-config.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      if (window.lucide) {
-        lucide.createIcons();
-      }
-    });
-    // Initialize theme from localStorage
     (function() {
       var saved = localStorage.getItem("app-theme");
       if (saved === "dark") {
         document.documentElement.setAttribute("data-theme", "dark");
+        document.documentElement.setAttribute("data-bs-theme", "dark");
       }
     })();
   </script>

@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@google/genai": "^2.7.0",
     "lucide-react": "^1.16.0"
   }
 }

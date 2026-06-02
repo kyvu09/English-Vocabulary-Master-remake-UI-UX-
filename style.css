@@ -1151,13 +1151,15 @@ tbody tr:last-child td {
 }
 
 .match-tile.matched {
-  opacity: 0.3 !important;
+  opacity: 0 !important;
+  visibility: hidden;
   pointer-events: none;
-  transform: scale(0.96);
+  transform: scale(0.92);
   border-color: transparent !important;
   background: var(--surface-soft) !important;
   color: var(--muted) !important;
   box-shadow: none !important;
+  transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease;
 }
 
 @keyframes matchShake {
