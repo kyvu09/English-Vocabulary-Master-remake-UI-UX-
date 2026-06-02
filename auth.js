@@ -215,6 +215,23 @@ function bindEvents() {
     }
   };
 
+  // Xử lý ẩn/hiện mật khẩu
+  const showLoginPassword = document.getElementById("showLoginPassword");
+  const loginPassword = document.getElementById("loginPassword");
+  if (showLoginPassword && loginPassword) {
+    showLoginPassword.addEventListener("change", () => {
+      loginPassword.type = showLoginPassword.checked ? "text" : "password";
+    });
+  }
+
+  const showRegisterPassword = document.getElementById("showRegisterPassword");
+  const registerPassword = document.getElementById("registerPassword");
+  if (showRegisterPassword && registerPassword) {
+    showRegisterPassword.addEventListener("change", () => {
+      registerPassword.type = showRegisterPassword.checked ? "text" : "password";
+    });
+  }
+
   refs.googleLoginBtn?.addEventListener("click", googleHandler);
   refs.googleRegisterBtn?.addEventListener("click", googleHandler);
 }
