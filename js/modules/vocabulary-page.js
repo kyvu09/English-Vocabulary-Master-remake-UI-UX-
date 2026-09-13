@@ -5,7 +5,7 @@ import {
   addDoc, updateDoc, serverTimestamp, where, limit, getDocs
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { showAlert, showConfirm, showToast } from '../core/ui-utils.js';
-import { normalizeSearch } from '../core/data-utils.js';
+import { normalizeSearch, lookupWordDetails } from '../core/data-utils.js';
 
 const PART_OF_SPEECH = {
   noun: 'Danh từ',
@@ -131,6 +131,17 @@ export async function mount() {
   document.getElementById('wordModalCancelBtn').addEventListener('click', closeWordModal);
   document.getElementById('wordModalSaveBtn').addEventListener('click', saveWord);
   document.getElementById('lookupBtn').addEventListener('click', lookupWord);
+  
+  const modalEnglishInput = document.getElementById('modalEnglishWord');
+  if (modalEnglishInput) {
+    modalEnglishInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        lookupWord();
+      }
+    });
+  }
+
   document.getElementById('wordSearchInput').addEventListener('input', filterTable);
   document.getElementById('wordFilterSession').addEventListener('change', filterTable);
 
@@ -146,71 +157,60 @@ export async function mount() {
 // ─── Tra cứu từ điển và Dịch thuật API ──────────────────────────────────────────
 
 async function lookupWord() {
-  const english = document.getElementById('modalEnglishWord').value.trim();
+  const englishInput = document.getElementById('modalEnglishWord');
+  const english = englishInput.value.trim();
   if (!english) {
     await showAlert('Vui lòng nhập từ tiếng Anh', 'Lưu ý');
     return;
   }
 
+  const lookupBtn = document.getElementById('lookupBtn');
   const statusEl = document.getElementById('lookupStatus');
+  statusEl.classList.remove('d-none');
   statusEl.style.display = 'block';
-  statusEl.textContent = '⏳ Đang tìm...';
-  statusEl.style.background = 'var(--info-bg)';
-  statusEl.style.color = 'var(--info)';
+  statusEl.className = 'alert alert-info py-2 px-3 small d-flex align-items-center gap-1';
+  statusEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> ⏳ Đang tra cứu từ vựng...';
+
+  const originalBtnContent = lookupBtn.innerHTML;
+  lookupBtn.disabled = true;
+  lookupBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
 
   try {
-   const dictBase = (window.__APP_CONFIG__?.API_DICTIONARY) || "https://api.dictionaryapi.dev/api/v2/entries/en";
-   const dictionaryUrl = `${dictBase}/${encodeURIComponent(english)}`;
-   const dictionaryResponse = await fetch(dictionaryUrl);
-  let sourceText = english;
+    const details = await lookupWordDetails(english);
 
-  if (dictionaryResponse.ok) {
-    const entries = await dictionaryResponse.json();
-    const firstEntry = Array.isArray(entries) ? entries[0] : null;
-    const firstMeaning = firstEntry?.meanings?.[0];
-    const firstDefinition = firstMeaning?.definitions?.[0]?.definition?.trim();
-    const phonetic =
-      firstEntry?.phonetic ||
-      firstEntry?.phonetics?.find(item => item?.text)?.text ||
-      '';
+    if (details && (details.meaning || details.phonetic || details.partOfSpeech)) {
+      if (details.meaning) {
+        document.getElementById('modalMeaning').value = details.meaning;
+      }
+      if (details.phonetic) {
+        document.getElementById('modalPhonetic').value = details.phonetic;
+      }
+      if (details.partOfSpeech && PART_OF_SPEECH[details.partOfSpeech]) {
+        document.getElementById('modalPartOfSpeech').value = details.partOfSpeech;
+      }
 
-    if (phonetic) document.getElementById('modalPhonetic').value = phonetic;
-    if (firstMeaning?.partOfSpeech) {
-      document.getElementById('modalPartOfSpeech').value = firstMeaning.partOfSpeech;
+      statusEl.className = 'alert alert-success py-2 px-3 small d-flex align-items-center gap-1';
+      statusEl.innerHTML = '<i data-lucide="check-circle" width="14" height="14"></i> Tra cứu thành công!';
+      if (window.lucide) lucide.createIcons({ root: statusEl });
+
+      setTimeout(() => {
+        statusEl.classList.add('d-none');
+        statusEl.style.display = 'none';
+      }, 2000);
+    } else {
+      statusEl.className = 'alert alert-warning py-2 px-3 small d-flex align-items-center gap-1';
+      statusEl.innerHTML = '<i data-lucide="alert-circle" width="14" height="14"></i> Không tìm thấy nghĩa tự động. Vui lòng tự nhập nghĩa.';
+      if (window.lucide) lucide.createIcons({ root: statusEl });
     }
-    if (firstDefinition) sourceText = firstDefinition;
+  } catch (err) {
+    statusEl.className = 'alert alert-warning py-2 px-3 small d-flex align-items-center gap-1';
+    statusEl.innerHTML = `<i data-lucide="alert-circle" width="14" height="14"></i> Không thể tải dữ liệu tự động (${err.message || 'Lỗi mạng'}). Vui lòng tự nhập.`;
+    if (window.lucide) lucide.createIcons({ root: statusEl });
+  } finally {
+    lookupBtn.disabled = false;
+    lookupBtn.innerHTML = originalBtnContent;
+    if (window.lucide) lucide.createIcons({ root: lookupBtn });
   }
-
-  const translateBase = (window.__APP_CONFIG__?.API_TRANSLATE) || "https://api.mymemory.translated.net/get";
-  const url = `${translateBase}?q=${encodeURIComponent(sourceText)}&langpair=en|vi`;
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error('API error');
-  }
-
-  const data = await response.json();
-  const result = data.responseData.translatedText;
-
-  document.getElementById('modalMeaning').value = result;
-
-  statusEl.style.background = 'var(--surface-soft)';
-  statusEl.className = 'small mt-1';
-  statusEl.innerHTML = '<i data-lucide="check-circle" width="14" height="14"></i> Dịch thành công!';
-  if (window.lucide) lucide.createIcons({ root: statusEl });
-  statusEl.style.display = 'block';
-  
-  setTimeout(() => {
-    statusEl.style.display = 'none';
-  }, 1500);
-
-} catch (err) {
-  statusEl.style.background = 'var(--surface-soft)';
-  statusEl.className = 'small mt-1';
-  statusEl.innerHTML = `<i data-lucide="x-circle" width="14" height="14"></i> Lỗi: ${err.message}`;
-  if (window.lucide) lucide.createIcons({ root: statusEl });
-  statusEl.style.display = 'block';
-}
 }
 
 function openWordModal(word = null) {
@@ -220,7 +220,12 @@ function openWordModal(word = null) {
   document.getElementById('modalPhonetic').value = word?.phonetic || '';
   document.getElementById('modalMeaning').value = word?.meaning || '';
   document.getElementById('modalPartOfSpeech').value = word?.partOfSpeech || '';
-  document.getElementById('lookupStatus').classList.add('d-none');
+  
+  const statusEl = document.getElementById('lookupStatus');
+  if (statusEl) {
+    statusEl.classList.add('d-none');
+    statusEl.style.display = 'none';
+  }
 
   const sessionSelect = document.getElementById('modalSession');
   sessionSelect.innerHTML = '<option value="">-- Chọn buổi học --</option>' +

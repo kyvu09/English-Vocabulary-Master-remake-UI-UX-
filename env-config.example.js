@@ -16,7 +16,7 @@ window.__APP_CONFIG__ = {
   FIREBASE_MEASUREMENT_ID: "YOUR_MEASUREMENT_ID",
 
   // --- External API URLs (public, can keep defaults) ---
-  API_DICTIONARY: "https://api.dictionaryapi.dev/api/v2/entries/en",
+  API_DICTIONARY: "https://freedictionaryapi.com/api/v1/entries/en",
   API_TRANSLATE: "https://api.mymemory.translated.net/get",
   GEMINI_API_KEY: "YOUR_GEMINI_API_KEY",
 };
