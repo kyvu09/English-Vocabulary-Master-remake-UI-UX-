@@ -1,4 +1,10 @@
 {
+  "name": "english-vocabulary-master",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "sync-env": "node sync-env.js"
+  },
   "dependencies": {
     "@google/genai": "^2.7.0",
     "lucide-react": "^1.16.0"

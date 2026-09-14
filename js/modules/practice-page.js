@@ -314,9 +314,21 @@ function showQuizConfig() {
 
 
 async function generateAIQuestions(words, count) {
-  const apiKey = window.__APP_CONFIG__?.GEMINI_API_KEY;
-  const MAX_RETRIES = 3;
+  const apiKey = window.__APP_CONFIG__?.GEMINI_API_KEY?.trim();
+  const MAX_RETRIES = 2;
   const INITIAL_DELAY = 1000; // 1 second
+
+  if (!apiKey) {
+    throw new Error('Thiếu GEMINI_API_KEY trong cấu hình. Vui lòng thêm vào file env-config.js.');
+  }
+
+  if (apiKey.startsWith('AQ.') || (!apiKey.startsWith('AIzaSy') && apiKey.length < 30)) {
+    throw new Error(
+      "Khóa GEMINI_API_KEY hiện tại không đúng định dạng của Google AI Studio (Key hợp lệ bắt đầu bằng 'AIzaSy...'). " +
+      "Chuỗi '" + apiKey.slice(0, 8) + "...' hiện có là token tạm thời hoặc không hợp lệ. " +
+      "Vui lòng truy cập https://aistudio.google.com/apikey để lấy API Key miễn phí và dán vào env-config.js."
+    );
+  }
 
   // Format the vocabulary words to feed into the prompt
   const vocabList = words.map((w, idx) => `${idx + 1}. English: "${getEnglish(w)}", Meaning: "${w.meaning}", POS: "${w.partOfSpeech || 'other'}"`).join('\n');
@@ -339,81 +351,111 @@ YÊU CẦU:
 
 Bắt buộc trả về kết quả khớp đúng với định dạng Schema JSON được yêu cầu.`;
 
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: promptText
-            }]
-          }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "ARRAY",
-              items: {
-                type: "OBJECT",
-                properties: {
-                  word: { type: "STRING" },
-                  question: { type: "STRING" },
-                  options: {
-                    type: "ARRAY",
-                    items: { type: "STRING" }
+  const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+  let lastError = null;
+
+  for (const model of candidateModels) {
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: promptText
+              }]
+            }],
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    word: { type: "STRING" },
+                    question: { type: "STRING" },
+                    options: {
+                      type: "ARRAY",
+                      items: { type: "STRING" }
+                    },
+                    correctOptionIndex: { type: "INTEGER", description: "0-indexed correct option in options array (0 to 3)" },
+                    explanation: { type: "STRING" }
                   },
-                  correctOptionIndex: { type: "INTEGER", description: "0-indexed correct option in options array (0 to 3)" },
-                  explanation: { type: "STRING" }
-                },
-                required: ["word", "question", "options", "correctOptionIndex", "explanation"]
+                  required: ["word", "question", "options", "correctOptionIndex", "explanation"]
+                }
               }
             }
+          })
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          
+          if (response.status === 401 || response.status === 403) {
+            let detailMsg = '';
+            try {
+              const errJson = JSON.parse(errText);
+              detailMsg = errJson.error?.message || '';
+            } catch (_) {}
+            throw new Error(
+              `Lỗi xác thực Gemini API (${response.status}): ${detailMsg || 'Khóa API không hợp lệ hoặc bị từ chối'}. ` +
+              `Vui lòng truy cập https://aistudio.google.com/apikey để lấy API Key (bắt đầu bằng 'AIzaSy...') và điền vào env-config.js.`
+            );
           }
-        })
-      });
 
-      if (!response.ok) {
-        const errText = await response.text();
-        const errorMsg = `Gemini API error: ${response.status} - ${errText}`;
+          if (response.status === 404) {
+            // Model not found or not supported in this region/key, break inner loop to try next model
+            console.warn(`Model ${model} not available (404). Trying next model...`);
+            lastError = new Error(`Model ${model} không hỗ trợ (404).`);
+            break;
+          }
 
-        if (response.status === 503 && attempt < MAX_RETRIES - 1) {
-          const delay = INITIAL_DELAY * Math.pow(2, attempt);
-          console.warn(`API temporarily unavailable. Retrying in ${delay}ms... (Attempt ${attempt + 1}/${MAX_RETRIES})`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          continue;
+          if (response.status === 503 && attempt < MAX_RETRIES - 1) {
+            const delay = INITIAL_DELAY * Math.pow(2, attempt);
+            console.warn(`API temporarily unavailable. Retrying in ${delay}ms... (Attempt ${attempt + 1}/${MAX_RETRIES})`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+
+          throw new Error(`Gemini API error: ${response.status} - ${errText}`);
         }
-        throw new Error(errorMsg);
-      }
 
-      const data = await response.json();
-      const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!candidateText) {
-        throw new Error("Không nhận được dữ liệu hợp lệ từ Gemini AI.");
-      }
+        const data = await response.json();
+        const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!candidateText) {
+          throw new Error("Không nhận được dữ liệu hợp lệ từ Gemini AI.");
+        }
 
-      const questions = JSON.parse(candidateText);
+        const questions = JSON.parse(candidateText);
 
-      // Map questions back to their Firestore word IDs if possible
-      return questions.map(q => {
-        const matchedWord = words.find(w => getEnglish(w).toLowerCase() === q.word.toLowerCase());
-        return {
-          id: matchedWord?.id || words[Math.floor(Math.random() * words.length)].id,
-          english: q.word,
-          meaning: matchedWord?.meaning || q.word,
-          direction: 'ai',
-          ...q
-        };
-      });
-    } catch (error) {
-      if (attempt === MAX_RETRIES - 1) {
-        console.error("AI Generation Error:", error);
-        throw error;
+        // Map questions back to their Firestore word IDs if possible
+        return questions.map(q => {
+          const matchedWord = words.find(w => getEnglish(w).toLowerCase() === q.word.toLowerCase());
+          return {
+            id: matchedWord?.id || words[Math.floor(Math.random() * words.length)].id,
+            english: q.word,
+            meaning: matchedWord?.meaning || q.word,
+            direction: 'ai',
+            ...q
+          };
+        });
+      } catch (error) {
+        lastError = error;
+        // Don't retry auth or validation errors
+        if (error.message.includes('401') || error.message.includes('403') || error.message.includes('GEMINI_API_KEY')) {
+          throw error;
+        }
+        if (attempt === MAX_RETRIES - 1) {
+          console.error(`AI Generation Error on ${model}:`, error);
+        }
       }
     }
   }
+
+  throw lastError || new Error("Không thể khởi tạo câu hỏi AI từ Gemini.");
 }
 
 async function startQuiz() {
