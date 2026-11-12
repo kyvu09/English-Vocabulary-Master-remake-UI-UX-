@@ -1142,7 +1142,7 @@ function startMatchPairs(words) {
 }
 
 function matchTick() {
-  if (matchState.finished) return;
+  if (!matchState || matchState.finished || matchState.locked) return;
   matchState.timer--;
   updateMatchTimer();
   if (matchState.timer <= 0) {
@@ -1203,9 +1203,28 @@ function renderMatchBoard(isFirstRender = false) {
   document.getElementById('practiceQuizContent').innerHTML = html;
   if (window.lucide) lucide.createIcons({ root: document.getElementById('practiceQuizContent') });
 
-  document.querySelectorAll('.match-tile').forEach(el => {
-    el.addEventListener('click', () => onMatchTileClick(el));
-  });
+  const board = document.querySelector('.match-board');
+  if (board) {
+    // Phản hồi tức thì ngay khi nhấn chuột/chạm (pointerdown) để không bị trễ hay trượt click khi di chuột nhanh
+    board.addEventListener('pointerdown', (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
+      const tile = e.target.closest('.match-tile');
+      if (!tile || tile.disabled) return;
+      e.preventDefault();
+      onMatchTileClick(tile);
+    });
+    // Hỗ trợ bàn phím (Enter / Space phát sinh click với e.detail === 0)
+    board.addEventListener('click', (e) => {
+      if (e.detail !== 0) return;
+      const tile = e.target.closest('.match-tile');
+      if (tile && !tile.disabled) onMatchTileClick(tile);
+    });
+    board.addEventListener('animationend', (e) => {
+      if (e.target.classList?.contains('animate-spawn-tile')) {
+        e.target.classList.remove('animate-spawn-tile');
+      }
+    });
+  }
 
   // Sau khi hiển thị, đổi tất cả trạng thái 'spawning' về 'active' để tránh chạy lại animation
   matchState.leftTiles.forEach(t => { if (t.state === 'spawning') t.state = 'active'; });
@@ -1213,25 +1232,38 @@ function renderMatchBoard(isFirstRender = false) {
 }
 
 function onMatchTileClick(el) {
-  if (matchState.finished || matchState.locked) return;
-  if (el.classList.contains('selected') || el.classList.contains('matched') || el.classList.contains('match-correct')) return;
+  if (!matchState || matchState.finished || matchState.locked) return;
+  if (el.disabled || el.classList.contains('matched') || el.classList.contains('match-correct')) return;
+
+  // Nếu thẻ đang có hiệu ứng báo sai từ lượt trước, xóa ngay để phản hồi tức thì
+  if (el.classList.contains('wrong')) {
+    el.classList.remove('wrong');
+  }
+
+  // Nhấn lại chính thẻ đang chọn -> bỏ chọn
+  if (el.classList.contains('selected')) {
+    el.classList.remove('selected');
+    matchState.selected = matchState.selected.filter(item => item !== el);
+    return;
+  }
 
   const side = el.dataset.side;
 
-  if (matchState.selected.length === 1) {
-    const first = matchState.selected[0];
-    if (first.dataset.side === side) {
-      first.classList.remove('selected');
-      matchState.selected = [];
-      return;
-    }
+  // Đang chọn 1 thẻ ở cùng cột -> chuyển ngay sang thẻ mới chỉ với 1 lần nhấn
+  const sameSideIdx = matchState.selected.findIndex(item => item.dataset.side === side);
+  if (sameSideIdx !== -1) {
+    document.querySelectorAll(`.match-tile.selected[data-side="${side}"]`).forEach(t => {
+      t.classList.remove('selected');
+    });
+    el.classList.add('selected');
+    matchState.selected[sameSideIdx] = el;
+    return;
   }
 
   el.classList.add('selected');
   matchState.selected.push(el);
 
   if (matchState.selected.length === 2) {
-    matchState.locked = true;
     checkMatchPair();
   }
 }
@@ -1252,16 +1284,16 @@ function checkMatchPair() {
     matchState.timer += 0.3;
     updateMatchTimer();
 
-    // Trước tiên áp dụng class match-correct để tạo hiệu ứng nhấp nháy xanh lá (pop) cực đẹp
+    // Trước tiên áp dụng class match-correct để tạo hiệu ứng nhấp nháy xanh lá (pop)
     a.classList.remove('selected');
     b.classList.remove('selected');
     a.classList.add('match-correct');
     b.classList.add('match-correct');
 
-    document.getElementById('matchStatsMatched').textContent = matchState.matched;
+    const matchedEl = document.getElementById('matchStatsMatched');
+    if (matchedEl) matchedEl.textContent = matchState.matched;
     const comboEl = document.getElementById('matchCombo');
     if (comboEl) comboEl.textContent = matchState.combo;
-    if (window.lucide) lucide.createIcons({ root: document.querySelector('.match-header') });
 
     // Xác định chỉ số slot của 2 thẻ vừa được ghép đúng
     const leftEl = a.dataset.side === 'left' ? a : b;
@@ -1273,7 +1305,11 @@ function checkMatchPair() {
     matchState.leftTiles[leftIdx].state = 'matched';
     matchState.rightTiles[rightIdx].state = 'matched';
 
-    // Sau khi hiệu ứng nhấp nháy xanh lá (pop) chạy được 400ms, chuyển sang trạng thái ẩn mờ (matched)
+    // Giải phóng lựa chọn ngay lập tức để người dùng chọn cặp tiếp theo không bị khựng
+    matchState.selected = [];
+    matchState.locked = false;
+
+    // Sau khi hiệu ứng pop chạy xong, chuyển sang trạng thái ẩn mờ (matched)
     setTimeout(() => {
       a.classList.remove('match-correct');
       b.classList.remove('match-correct');
@@ -1281,45 +1317,45 @@ function checkMatchPair() {
       b.classList.add('matched');
       a.disabled = true;
       b.disabled = true;
-    }, 400);
-
-    // Giải phóng trạng thái lựa chọn để người dùng có thể thao tác tiếp cặp khác ngay lập tức
-    matchState.selected = [];
-    matchState.locked = false;
+    }, 320);
 
     // Kiểm tra xem tất cả các ô hiện tại đã được ghép đúng chưa
     const activeCount = matchState.leftTiles.filter(t => t.state === 'active' || t.state === 'spawning').length;
     if (activeCount === 0) {
-      matchState.locked = true; // Khóa tạm thời để thực hiện hiệu ứng đổi lượt mới
+      matchState.locked = true; // Tạm dừng đồng hồ & khóa trong lúc nạp bảng mới
       setTimeout(() => {
         if (matchState.pool.length > 0) {
           replaceEntireBoard();
         } else {
           endMatchPairs();
         }
-      }, 700); // Chờ 700ms để hiệu ứng biến mất của cặp cuối hoàn tất
+      }, 360);
     }
   } else {
     matchState.combo = 0;
     const comboEl = document.getElementById('matchCombo');
     if (comboEl) comboEl.textContent = '0';
 
+    // Mở khóa ngay để người dùng có thể bấm chọn lại lập tức mà không phải chờ 500ms
+    a.classList.remove('selected');
+    b.classList.remove('selected');
     a.classList.add('wrong');
     b.classList.add('wrong');
+    matchState.selected = [];
+    matchState.locked = false;
 
     matchState.timer -= 0.7;
     if (matchState.timer < 0) matchState.timer = 0;
     updateMatchTimer();
     if (matchState.timer <= 0) {
       endMatchPairs();
+      return;
     }
 
     setTimeout(() => {
-      a.classList.remove('selected', 'wrong');
-      b.classList.remove('selected', 'wrong');
-      matchState.selected = [];
-      matchState.locked = false;
-    }, 500);
+      a.classList.remove('wrong');
+      b.classList.remove('wrong');
+    }, 320);
   }
 }
 

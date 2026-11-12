@@ -1,46 +1,68 @@
-/* Design Tokens & CSS Variables */
+/* ==========================================================================
+   Design Tokens — nguồn duy nhất cho màu sắc, khoảng cách, bo góc, đổ bóng
+   (đã hợp nhất từ style.css + bootstrap-theme.css)
+   ========================================================================== */
 :root {
+  color-scheme: light;
+
   /* Colors - Semantic */
-  --bg: #f0f4f8;
-  --surface: rgba(255, 255, 255, 0.85);
+  --bg: #f4f7fb;
+  --surface: rgba(255, 255, 255, 0.92);
   --surface-strong: #ffffff;
   --surface-soft: #f8fbff;
-  --text: #1e293b;
-  --muted: #64748b;
-  --line: #e2e8f0;
-  --line-soft: #f1f5f9;
+  --text: #142033;
+  --muted: #5b6678;            /* tối hơn để đạt tương phản AA trên nền sáng */
+  --line: #dbe4f0;
+  --line-soft: #e8eef6;
 
-  /* Brand Colors */
+  /* Brand */
   --primary: #2563eb;
-  --primary-2: #0284c7;
-  --primary-soft: #eff6ff;
-  --success: #16a34a;
+  --primary-2: #0ea5e9;
+  --primary-soft: #eef4ff;
+  --primary-text: #1d4ed8;     /* màu chữ/link primary (đổi sáng hơn ở dark mode) */
+  --success: #15803d;
   --success-bg: #f0fdf4;
-  --warning: #d97706;
-  --warning-bg: #fffbeb;
+  --warning: #b45309;
+  --warning-bg: #fff7ed;
   --danger: #dc2626;
   --danger-bg: #fef2f2;
   --info: #0284c7;
   --info-bg: #f0f9ff;
 
-  /* Gradients - Modern */
+  /* Gamification */
+  --accent-streak: #f97316;
+  --accent-xp: #eab308;
+
+  /* Màu từng chế độ luyện tập */
+  --mode-quiz: #2563eb;
+  --mode-listening: #7c3aed;
+  --mode-match: #e11d48;
+  --mode-ai: #0284c7;
+
+  /* Gradients */
   --gradient-primary: linear-gradient(135deg, #2563eb, #0284c7);
   --gradient-success: linear-gradient(135deg, #16a34a, #059669);
   --gradient-warning: linear-gradient(135deg, #d97706, #ea580c);
+  --gradient-streak: linear-gradient(135deg, #f97316, #ef4444);
 
-  /* Shadows - Elevation System */
-  --shadow-1: 0 4px 8px rgba(0, 0, 0, 0.08);
-  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.12);
-  --shadow-3: 0 16px 40px rgba(0, 0, 0, 0.16);
-  --shadow-soft: 0 10px 25px -5px rgba(15, 23, 42, 0.05);
-  --shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.1);
-  --shadow-hover: 0 25px 50px -12px rgba(15, 23, 42, 0.15);
+  /* Elevation — 3 mức chính (+ alias để tương thích code cũ) */
+  --shadow-1: 0 2px 6px rgba(15, 23, 42, 0.06);
+  --shadow-2: 0 8px 24px rgba(15, 23, 42, 0.10);
+  --shadow-3: 0 16px 40px rgba(15, 23, 42, 0.16);
+  --shadow-soft: var(--shadow-1);
+  --shadow: var(--shadow-2);
+  --shadow-hover: var(--shadow-3);
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: 'Fira Code', monospace;
+  --fs-display: 2rem;
+  --fs-h1: 1.5rem;
+  --fs-h2: 1.25rem;
+  --fs-body: 1rem;
+  --fs-small: 0.875rem;
+  --fs-caption: 0.75rem;
 
-  /* Spacing Scale (8px base) */
+  /* Spacing Scale (4/8px) */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 12px;
@@ -53,55 +75,72 @@
   --space-6xl: 56px;
 
   /* Border Radius */
-  --radius: 24px;
-  --radius-sm: 16px;
+  --radius: 16px;
+  --radius-sm: 12px;
   --radius-xs: 8px;
   --radius-full: 999px;
 
-  /* Transitions & Animations */
-  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Motion */
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Layout */
   --sidebar-width: 260px;
   --navbar-height: 64px;
-  --container-max: 1300px;
+  --container-max: 1200px;
   --container-width: 92%;
+  --touch-target: 44px;
 
-  /* Z-index Layers */
+  /* Focus */
+  --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.45);
+
+  /* Z-index layers */
   --z-dropdown: 50;
   --z-sticky: 40;
   --z-modal: 100;
   --z-tooltip: 80;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   :root {
     --sidebar-width: 0;
   }
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
+
   --bg: #0f172a;
   --surface: rgba(30, 41, 59, 0.85);
   --surface-strong: #1e293b;
   --surface-soft: #1a2332;
   --text: #f1f5f9;
-  --muted: #94a3b8;
+  --muted: #a3b1c6;
   --line: #334155;
   --line-soft: #1e293b;
 
   --primary-soft: #1e3a5f;
+  --primary-text: #93c5fd;
+  /* Màu trạng thái sáng hơn để đọc được trên nền tối */
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --info: #38bdf8;
   --success-bg: #14532d;
   --warning-bg: #422006;
   --danger-bg: #450a0a;
   --info-bg: #0c4a6e;
 
-  --shadow-1: 0 4px 8px rgba(0, 0, 0, 0.3);
-  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-3: 0 16px 40px rgba(0, 0, 0, 0.5);
-  --shadow-soft: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-  --shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
-  --shadow-hover: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --accent-streak: #fb923c;
+  --mode-quiz: #60a5fa;
+  --mode-listening: #a78bfa;
+  --mode-match: #fb7185;
+  --mode-ai: #38bdf8;
+
+  --shadow-1: 0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 16px 40px rgba(0, 0, 0, 0.55);
+
+  --focus-ring: 0 0 0 3px rgba(147, 197, 253, 0.55);
 }

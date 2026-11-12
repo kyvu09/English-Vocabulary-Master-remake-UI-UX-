@@ -1,50 +1,4 @@
-:root {
-  --bg: #f4f7fb;
-  --surface: rgba(255, 255, 255, 0.92);
-  --surface-strong: #ffffff;
-  --surface-soft: #f8fbff;
-  --text: #142033;
-  --muted: #667085;
-  --line: #dbe4f0;
-  --line-soft: #e8eef6;
-  --primary: #2563eb;
-  --primary-2: #0ea5e9;
-  --primary-soft: #eef4ff;
-  --success: #15803d;
-  --success-bg: #f0fdf4;
-  --warning: #b45309;
-  --warning-bg: #fff7ed;
-  --danger: #dc2626;
-  --danger-bg: #fef2f2;
-  --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
-  --shadow-soft: 0 10px 24px rgba(15, 23, 42, 0.06);
-  --radius: 22px;
-  --radius-sm: 14px;
-}
-
-[data-theme="dark"] {
-  --bg: #0f172a;
-  --surface: rgba(30, 41, 59, 0.85);
-  --surface-strong: #1e293b;
-  --surface-soft: #1a2332;
-  --text: #f1f5f9;
-  --muted: #94a3b8;
-  --line: #334155;
-  --line-soft: #1e293b;
-  --primary-soft: #1e3a5f;
-  --success-bg: #14532d;
-  --warning-bg: #422006;
-  --danger-bg: #450a0a;
-  --shadow: 0 18px 45px rgba(0, 0, 0, 0.3);
-  --shadow-soft: 0 10px 24px rgba(0, 0, 0, 0.25);
-}
-
-[data-theme="dark"] .btn-google {
-  color: var(--text);
-  border-color: var(--line);
-  background: var(--surface-strong);
-}
-
+/* Design tokens đã được hợp nhất vào styles/variables.css */
 * {
   box-sizing: border-box;
 }
@@ -1111,8 +1065,9 @@ tbody tr:last-child td {
   font-weight: 600;
   font-size: 0.92rem;
   line-height: 1.35;
-  transition: all 0.18s ease;
+  transition: background-color 0.08s ease, border-color 0.08s ease, color 0.08s ease, transform 0.08s ease, box-shadow 0.08s ease;
   user-select: none;
+  touch-action: manipulation;
   word-break: break-word;
   min-height: 48px;
   display: flex;
@@ -1121,18 +1076,24 @@ tbody tr:last-child td {
   color: var(--text);
 }
 
-.match-tile:hover:not(.matched):not(.match-correct):not([disabled]) {
-  border-color: var(--primary);
-  background: var(--primary-soft);
+.match-tile:hover:not(.selected):not(.matched):not(.match-correct):not([disabled]) {
+  border-color: rgba(37, 99, 235, 0.55);
+  background: var(--surface-soft);
   transform: translateY(-1px);
-  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.08);
 }
 
-.match-tile.selected {
+.match-tile:active:not(.matched):not(.match-correct):not([disabled]) {
+  transform: scale(0.98);
+}
+
+.match-tile.selected,
+.match-tile.selected:hover {
   border-color: var(--primary);
-   background: var(--primary-soft);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
-  transform: scale(1.02);
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.32), 0 0 0 3px rgba(37, 99, 235, 0.18);
+  transform: scale(1.015);
 }
 
 .match-tile.match-correct {
@@ -1284,7 +1245,7 @@ tbody tr:last-child td {
   }
 }
 .animate-spawn-tile {
-  animation: matchTileSpawn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: matchTileSpawn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Daily Streak CSS */

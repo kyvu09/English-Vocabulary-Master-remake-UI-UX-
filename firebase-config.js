@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { 
   getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp,
-  collection, query, getDocs
+  collection, query, getDocs, increment
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 export const LOGIN_PAGE = "login.html";
@@ -195,4 +195,30 @@ export async function triggerStreakAction(userId) {
   if (window.updateStreakHeaderUI) {
     window.updateStreakHeaderUI(newStreak, true);
   }
+}
+
+
+// ── Hoạt động theo ngày (phục vụ mục tiêu ngày + biểu đồ 7 ngày) ──────────────
+export function getDayKey(date = new Date()) {
+  return date.toLocaleDateString('sv-SE'); // "YYYY-MM-DD" theo giờ địa phương
+}
+
+/**
+ * Cộng thêm `count` từ đã luyện vào ngày hôm nay (users/{uid}.dailyActivity.{YYYY-MM-DD}).
+ * Đồng thời cập nhật bộ nhớ đệm window.__appUser để giao diện phản hồi ngay.
+ */
+export async function recordDailyActivity(userId, count) {
+  if (!db || !userId || !count || count < 1) return;
+  const key = getDayKey();
+
+  if (window.__appUser) {
+    window.__appUser.dailyActivity = window.__appUser.dailyActivity || {};
+    window.__appUser.dailyActivity[key] = (window.__appUser.dailyActivity[key] || 0) + count;
+  }
+
+  await setDoc(
+    doc(db, "users", userId),
+    { dailyActivity: { [key]: increment(count) } },
+    { merge: true }
+  );
 }

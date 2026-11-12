@@ -3,24 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2563eb" />
   <title>English Vocabulary Master</title>
+  <link rel="icon" type="image/png" href="img/logo-64.png">
+  <script>
+    // Áp dụng theme trước khi vẽ giao diện để tránh bị nháy sáng/tối
+    (function () {
+      try {
+        var pref = localStorage.getItem("app-theme") || "system";
+        var theme = pref === "system"
+          ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+          : pref;
+        document.documentElement.setAttribute("data-theme", theme);
+        document.documentElement.setAttribute("data-bs-theme", theme);
+      } catch (e) {}
+    })();
+  </script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/variables.css">
-  <link rel="stylesheet" href="styles/animations.css">
-  <link rel="stylesheet" href="styles/layout.css">
-  <link rel="stylesheet" href="styles/components.css">
-  <link rel="stylesheet" href="styles/bootstrap-theme.css">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="styles/variables.css?v=20261112d">
+  <link rel="stylesheet" href="styles/animations.css?v=20261112d">
+  <link rel="stylesheet" href="styles/layout.css?v=20261112d">
+  <link rel="stylesheet" href="styles/components.css?v=20261112d">
+  <link rel="stylesheet" href="styles/bootstrap-theme.css?v=20261112d">
+  <link rel="stylesheet" href="style.css?v=20261112d">
+  <link rel="stylesheet" href="styles/ux.css?v=20261112d">
 </head>
 <body>
+  <a class="skip-link" href="#pageContent">Bỏ qua tới nội dung chính</a>
+  <div id="routeAnnouncer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
   <div class="app-wrapper">
-    <nav class="sidebar" id="sidebar">
+    <nav class="sidebar" id="sidebar" aria-label="Điều hướng chính">
       <div class="sidebar-header">
-        <a href="#dashboard" class="sidebar-logo">
-          
+        <a href="#dashboard" class="sidebar-logo" aria-label="English Vocabulary Master - Trang chủ">
+          <img src="img/logo-64.png" width="36" height="36" alt="" />
           <span>English Vocabulary</span>
         </a>
         <button class="sidebar-close-btn" id="sidebarCloseBtn" type="button" aria-label="Đóng menu">
@@ -29,7 +48,7 @@
       </div>
 
       <div class="sidebar-nav">
-        <button class="nav-item active" type="button" data-page="dashboard">
+        <button class="nav-item active" type="button" data-page="dashboard" aria-current="page">
           <span class="nav-icon"><i data-lucide="home"></i></span>
           <span>Trang chủ</span>
         </button>
@@ -51,19 +70,12 @@
         </button>
         <button class="nav-item" type="button" data-page="leaderboard">
           <span class="nav-icon"><i data-lucide="award"></i></span>
-          <span>Xếp Hạng</span>
-        </button>
-        <button class="nav-item" type="button" data-page="themes">
-          <span class="nav-icon" id="themeIcon"><i data-lucide="sun"></i></span>
-          <span style="flex:1">Chủ đề</span>
-          <span class="theme-switch" id="themeSwitch">
-            <span class="theme-switch-slider" id="themeSlider"></span>
-          </span>
+          <span>Xếp hạng</span>
         </button>
       </div>
 
       <div class="sidebar-footer">
-        <button class="user-profile" id="userProfile" type="button" aria-label="Quản lý tài khoản">
+        <button class="user-profile" id="userProfile" type="button" aria-label="Tài khoản và cài đặt">
           <div class="user-avatar" id="userAvatar">
             <img id="userAvatarImage" alt="Ảnh đại diện" hidden />
             <span id="userInitial">U</span>
@@ -72,7 +84,7 @@
             <div class="user-name" id="userName">Đang tải...</div>
             <div class="user-email" id="userEmail">...</div>
           </div>
-          <span class="user-profile-arrow">
+          <span class="user-profile-arrow" aria-hidden="true">
             <i data-lucide="chevron-right" width="16" height="16"></i>
           </span>
         </button>
@@ -81,31 +93,49 @@
 
     <header class="navbar">
       <div class="navbar-left">
-        <button class="hamburger-btn navbar-menu-btn" id="hamburgerBtn" type="button" aria-label="Mở menu">
+        <button class="hamburger-btn navbar-menu-btn" id="hamburgerBtn" type="button" aria-label="Mở menu" aria-controls="sidebar" aria-expanded="false">
           <span class="hamburger-line"></span>
           <span class="hamburger-line"></span>
           <span class="hamburger-line"></span>
         </button>
-        <h1 class="navbar-title" id="pageTitle">Trang chủ</h1>
+        <div class="navbar-title" id="pageTitle" role="presentation">Trang chủ</div>
       </div>
 
       <div class="navbar-right">
-        <div class="streak-badge inactive" id="streakBadge" title="Chuỗi học tập hằng ngày">
-          <span class="streak-icon-wrap">
-            <i data-lucide="flame" class="streak-icon" id="streakIcon" style="width:20px; height:20px;"></i>
-          </span>
-          <span class="streak-count" id="streakCountText">0</span>
+        <div class="navbar-search" role="search">
+          <span class="search-icon" aria-hidden="true"><i data-lucide="search" width="16" height="16"></i></span>
+          <input id="globalSearch" type="search" placeholder="Tìm từ vựng…" aria-label="Tìm từ vựng" autocomplete="off" />
+          <kbd class="kbd" aria-hidden="true">Ctrl K</kbd>
         </div>
+
+        <div class="streak-wrap" id="streakWrap">
+          <button class="streak-badge inactive" id="streakBadge" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="streakPop" aria-label="Chuỗi học tập hằng ngày">
+            <span class="streak-icon-wrap">
+              <i data-lucide="flame" class="streak-icon" id="streakIcon" style="width:20px; height:20px;"></i>
+            </span>
+            <span class="streak-count" id="streakCountText">0</span>
+          </button>
+          <div class="streak-pop" id="streakPop" role="dialog" aria-label="Chuỗi học tập" hidden>
+            <div class="fw-bold" id="streakPopTitle">Chuỗi học tập</div>
+            <div class="text-muted small" id="streakPopDesc">Học mỗi ngày để giữ chuỗi.</div>
+            <div class="streak-days" id="streakDays"></div>
+            <button type="button" class="btn btn-primary btn-sm w-100" id="streakPracticeBtn">Luyện tập ngay</button>
+          </div>
+        </div>
+
+        <button class="navbar-icon-btn" id="themeToggleBtn" type="button" aria-label="Đổi giao diện sáng/tối">
+          <span id="themeIcon" aria-hidden="true"><i data-lucide="sun"></i></span>
+        </button>
       </div>
     </header>
 
-    <main class="app-content">
-      <div id="pageContent" class="page"></div>
+    <main class="app-content" id="mainContent">
+      <div id="pageContent" class="page" tabindex="-1"></div>
     </main>
 
     <div class="tab-bar">
-      <div class="tab-bar-items">
-        <button class="tab-bar-item active" type="button" data-page="dashboard">
+      <div class="tab-bar-items" role="navigation" aria-label="Điều hướng nhanh">
+        <button class="tab-bar-item active" type="button" data-page="dashboard" aria-current="page">
           <span class="tab-bar-icon"><i data-lucide="home"></i></span>
           <span>Trang chủ</span>
         </button>
@@ -113,17 +143,17 @@
           <span class="tab-bar-icon"><i data-lucide="book-open"></i></span>
           <span>Từ vựng</span>
         </button>
-        <button class="tab-bar-item" type="button" data-page="sessions">
-          <span class="tab-bar-icon"><i data-lucide="target"></i></span>
-          <span>Buổi học</span>
-        </button>
-        <button class="tab-bar-item" type="button" data-page="practice">
+        <button class="tab-bar-item tab-bar-fab" type="button" data-page="practice">
           <span class="tab-bar-icon"><i data-lucide="pen-tool"></i></span>
           <span>Luyện tập</span>
         </button>
         <button class="tab-bar-item" type="button" data-page="results">
           <span class="tab-bar-icon"><i data-lucide="bar-chart-2"></i></span>
           <span>Kết quả</span>
+        </button>
+        <button class="tab-bar-item" type="button" id="tabProfileBtn">
+          <span class="tab-bar-icon"><i data-lucide="user"></i></span>
+          <span>Hồ sơ</span>
         </button>
       </div>
     </div>
@@ -132,16 +162,16 @@
   <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
   <!-- Bootstrap Toast Container -->
-  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1060;" id="toastContainer"></div>
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1060;" id="toastContainer" aria-live="polite"></div>
 
-  <div id="accountModal" class="modal fade" aria-hidden="true" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+  <div id="accountModal" class="modal fade" aria-hidden="true" tabindex="-1" aria-labelledby="accountModalTitle">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
       <div class="modal-content p-0 border-0 shadow" style="border-radius: var(--radius);">
         <div class="p-4">
           <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
             <div>
-              <h2 class="modal-title fs-4 fw-bold m-0">Quản lý tài khoản</h2>
-              <p class="text-muted small mt-1 mb-0">thông tin hồ sơ</p>
+              <h2 class="modal-title fs-4 fw-bold m-0" id="accountModalTitle">Tài khoản &amp; cài đặt</h2>
+              <p class="text-muted small mt-1 mb-0">Thông tin hồ sơ, giao diện và mục tiêu học tập</p>
             </div>
             <button class="btn-close" id="accountModalCloseBtn" type="button" aria-label="Đóng"></button>
           </div>
@@ -156,11 +186,27 @@
             </div>
           </div>
 
-          <form id="accountForm">
+          <h3 class="fs-6 fw-bold mb-2">Giao diện</h3>
+          <div class="seg mb-4" id="themeSeg" role="group" aria-label="Chọn giao diện">
+            <button type="button" data-theme-pref="light" aria-pressed="false"><i data-lucide="sun" width="16" height="16"></i> Sáng</button>
+            <button type="button" data-theme-pref="dark" aria-pressed="false"><i data-lucide="moon" width="16" height="16"></i> Tối</button>
+            <button type="button" data-theme-pref="system" aria-pressed="true"><i data-lucide="monitor" width="16" height="16"></i> Theo hệ thống</button>
+          </div>
+
+          <h3 class="fs-6 fw-bold mb-2">Mục tiêu mỗi ngày</h3>
+          <div class="seg mb-4" id="goalSeg" role="group" aria-label="Chọn mục tiêu mỗi ngày">
+            <button type="button" data-goal="10" aria-pressed="false">10 từ</button>
+            <button type="button" data-goal="20" aria-pressed="true">20 từ</button>
+            <button type="button" data-goal="30" aria-pressed="false">30 từ</button>
+            <button type="button" data-goal="50" aria-pressed="false">50 từ</button>
+          </div>
+
+          <h3 class="fs-6 fw-bold mb-2">Hồ sơ</h3>
+          <form id="accountForm" novalidate>
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label fw-semibold" for="accountDisplayName">Tên hiển thị</label>
-                <input id="accountDisplayName" class="form-control" type="text" placeholder="Ví dụ: Nguyễn Văn A" />
+                <input id="accountDisplayName" class="form-control" type="text" placeholder="Ví dụ: Nguyễn Văn A" autocomplete="name" />
               </div>
               <div class="col-md-6">
                 <label class="form-label fw-semibold" for="accountEmail">Email</label>
@@ -195,14 +241,13 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="env-config.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Khóa phiên bản Lucide để giao diện ổn định (không dùng @latest) -->
+  <script src="https://unpkg.com/lucide@1.72.0"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      if (window.lucide) {
-        lucide.createIcons();
-      }
+    document.addEventListener("DOMContentLoaded", function () {
+      if (window.lucide) lucide.createIcons();
     });
   </script>
-  <script type="module" src="app.js"></script>
+  <script type="module" src="app.js?v=20261112d"></script>
 </body>
 </html>

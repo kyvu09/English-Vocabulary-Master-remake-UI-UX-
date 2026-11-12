@@ -4,7 +4,8 @@ import {
   firebaseReady,
   ensureUserProfile,
   LOGIN_PAGE,
-  updateUserTotalPoints
+  updateUserTotalPoints,
+  getDayKey
 } from "./firebase-config.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
@@ -13,15 +14,15 @@ import {
   signOut,
   updateProfile
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { router, initRouter } from "./js/core/router.js";
-import * as dashboardPage from "./js/modules/dashboard-page.js";
-import * as vocabularyPage from "./js/modules/vocabulary-page.js";
-import * as sessionsPage from "./js/modules/sessions-page.js";
-import * as practicePage from "./js/modules/practice-page.js";
-import * as resultsPage from "./js/modules/results-page.js";
-import * as leaderboardPage from "./js/modules/leaderboard-page.js";
+import { router, initRouter } from "./js/core/router.js?v=20261112d";
+import * as dashboardPage from "./js/modules/dashboard-page.js?v=20261112d";
+import * as vocabularyPage from "./js/modules/vocabulary-page.js?v=20261112d";
+import * as sessionsPage from "./js/modules/sessions-page.js?v=20261112d";
+import * as practicePage from "./js/modules/practice-page.js?v=20261112d";
+import * as resultsPage from "./js/modules/results-page.js?v=20261112d";
+import * as leaderboardPage from "./js/modules/leaderboard-page.js?v=20261112d";
 
-import { showAlert } from "./js/core/ui-utils.js";
+import { showAlert, showToast } from "./js/core/ui-utils.js?v=20261112d";
 
 const refs = {
   userProfile: document.getElementById("userProfile"),
@@ -46,12 +47,20 @@ const refs = {
   accountSaveBtn: document.getElementById("accountSaveBtn"),
   accountResetPasswordBtn: document.getElementById("accountResetPasswordBtn"),
   accountCancelBtn: document.getElementById("accountCancelBtn"),
-  accountModalCloseBtn: document.getElementById("accountModalCloseBtn")
+  accountModalCloseBtn: document.getElementById("accountModalCloseBtn"),
+  tabProfileBtn: document.getElementById("tabProfileBtn"),
+  themeToggleBtn: document.getElementById("themeToggleBtn"),
+  themeSeg: document.getElementById("themeSeg"),
+  goalSeg: document.getElementById("goalSeg"),
+  streakBadge: document.getElementById("streakBadge"),
+  streakPop: document.getElementById("streakPop"),
+  streakWrap: document.getElementById("streakWrap")
 };
 
 let routerStarted = false;
 
 window.router = router;
+window.__appUser = { dailyActivity: {}, totalPoints: 0 };
 
 router.registerPage("dashboard", dashboardPage);
 router.registerPage("vocabulary", vocabularyPage);
@@ -309,57 +318,214 @@ function bindGlobalEvents() {
   });
 
   refs.globalSearch?.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      refs.globalSearch.value = "";
+      refs.globalSearch.blur();
+      return;
+    }
     if (event.key !== "Enter") return;
     const keyword = refs.globalSearch.value.trim();
     if (!keyword) return;
-    window.vocabSearchQuery = keyword;
-    router.navigateTo("vocabulary");
+
+    if (router.getCurrentPage() === "vocabulary") {
+      // Đang ở trang Từ vựng: điền thẳng vào ô lọc của trang
+      const pageSearch = document.getElementById("wordSearchInput");
+      if (pageSearch) {
+        pageSearch.value = keyword;
+        pageSearch.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    } else {
+      window.vocabSearchQuery = keyword;
+      router.navigateTo("vocabulary");
+    }
+    refs.globalSearch.value = "";
+    refs.globalSearch.blur();
   });
 
-  // Chuyển đổi chế độ màu giao diện (bắt sự kiện ở capture phase để xử lý trước router)
-  document.addEventListener("click", (e) => {
-    const themesBtn = e.target.closest('[data-page="themes"]');
-    if (!themesBtn) return;
-    e.stopPropagation();
-    toggleTheme();
-    // Đóng sidebar trên thiết bị di động
-    if (window.innerWidth <= 768) {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('sidebarOverlay');
-      if (sidebar) sidebar.classList.remove('show');
-      if (overlay) overlay.classList.remove('show');
-      document.getElementById('hamburgerBtn')?.classList.remove('is-active');
-      document.body.classList.remove('no-scroll');
+  // Phím tắt: Ctrl/Cmd + K hoặc "/" để tìm kiếm nhanh
+  document.addEventListener("keydown", (event) => {
+    const tag = (event.target?.tagName || "").toLowerCase();
+    const typing = ["input", "textarea", "select"].includes(tag) || event.target?.isContentEditable;
+    const isCmdK = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k";
+    if (isCmdK || (event.key === "/" && !typing)) {
+      event.preventDefault();
+      if (window.getComputedStyle(refs.globalSearch?.parentElement || document.body).display === "none") {
+        router.navigateTo("vocabulary");
+        return;
+      }
+      refs.globalSearch?.focus();
+      refs.globalSearch?.select();
     }
-  }, true);
+  });
+
+  // Hồ sơ trên thanh tab (mobile)
+  refs.tabProfileBtn?.addEventListener("click", openAccountModal);
+
+  // Giao diện sáng/tối/hệ thống
+  refs.themeToggleBtn?.addEventListener("click", cycleTheme);
+  refs.themeSeg?.addEventListener("click", (event) => {
+    const btn = event.target.closest("[data-theme-pref]");
+    if (btn) setThemePreference(btn.dataset.themePref);
+  });
+  window.matchMedia?.("(prefers-color-scheme: dark)").addEventListener?.("change", () => {
+    if (getThemePreference() === "system") applyTheme("system");
+  });
+
+  // Mục tiêu mỗi ngày
+  refs.goalSeg?.addEventListener("click", (event) => {
+    const btn = event.target.closest("[data-goal]");
+    if (!btn) return;
+    setDailyGoal(Number(btn.dataset.goal));
+  });
+
+  bindStreakPopover();
 }
 
-function toggleTheme() {
-  const html = document.documentElement;
-  const isDark = html.getAttribute("data-theme") === "dark";
-  const newTheme = isDark ? "light" : "dark";
-  html.setAttribute("data-theme", newTheme);
-  html.setAttribute("data-bs-theme", newTheme);
-  localStorage.setItem("app-theme", newTheme);
-  updateThemeUI(newTheme);
+// ─── Mục tiêu ngày ─────────────────────────────────────────────────────────────
+export function getDailyGoal() {
+  const stored = Number(localStorage.getItem("daily-goal"));
+  return [10, 20, 30, 50].includes(stored) ? stored : 20;
 }
 
-function updateThemeUI(theme) {
-  const iconContainer = document.getElementById('themeIcon');
-  if (iconContainer) {
-    iconContainer.innerHTML = `<i data-lucide="${theme === 'dark' ? 'moon' : 'sun'}"></i>`;
-    if (window.lucide) {
-      lucide.createIcons({ root: iconContainer });
-    }
+function setDailyGoal(value) {
+  localStorage.setItem("daily-goal", String(value));
+  syncGoalSeg();
+  window.dispatchEvent(new CustomEvent("daily-goal-changed", { detail: { goal: value } }));
+}
+
+function syncGoalSeg() {
+  const goal = getDailyGoal();
+  refs.goalSeg?.querySelectorAll("[data-goal]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(Number(btn.dataset.goal) === goal));
+  });
+}
+window.getDailyGoal = getDailyGoal;
+
+// ─── Streak popover ────────────────────────────────────────────────────────────
+function renderStreakPopover() {
+  const daysEl = document.getElementById("streakDays");
+  if (!daysEl) return;
+
+  const activity = window.__appUser?.dailyActivity || {};
+  const labels = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+  const today = new Date();
+  const cells = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key = getDayKey(d);
+    const done = (activity[key] || 0) > 0;
+    cells.push(`
+      <div class="streak-day ${done ? "done" : ""} ${i === 0 ? "today" : ""}">
+        <span class="dot" aria-hidden="true">${done ? "✓" : ""}</span>
+        <span>${labels[d.getDay()]}</span>
+        <span class="sr-only">${done ? "đã học" : "chưa học"}</span>
+      </div>`);
+  }
+  daysEl.innerHTML = cells.join("");
+
+  const state = window.__streakState || { count: 0, active: false };
+  const title = document.getElementById("streakPopTitle");
+  const desc = document.getElementById("streakPopDesc");
+  if (title) title.textContent = state.count > 0 ? `Chuỗi ${state.count} ngày 🔥` : "Chưa có chuỗi học";
+  if (desc) {
+    desc.textContent = state.active
+      ? "Tuyệt vời! Hôm nay bạn đã giữ được chuỗi."
+      : state.count > 0
+        ? "Hôm nay bạn chưa học. Luyện tập ngay để không mất chuỗi!"
+        : "Học một chút mỗi ngày để bắt đầu chuỗi mới.";
   }
 }
 
-function initTheme() {
+function bindStreakPopover() {
+  const { streakBadge, streakPop, streakWrap } = refs;
+  if (!streakBadge || !streakPop) return;
+
+  const close = () => {
+    streakPop.hidden = true;
+    streakBadge.setAttribute("aria-expanded", "false");
+  };
+  const toggle = () => {
+    const willOpen = streakPop.hidden;
+    if (willOpen) renderStreakPopover();
+    streakPop.hidden = !willOpen;
+    streakBadge.setAttribute("aria-expanded", String(willOpen));
+  };
+
+  streakBadge.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggle();
+  });
+  document.addEventListener("click", (event) => {
+    if (!streakWrap.contains(event.target)) close();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !streakPop.hidden) {
+      close();
+      streakBadge.focus();
+    }
+  });
+  document.getElementById("streakPracticeBtn")?.addEventListener("click", () => {
+    close();
+    router.navigateTo("practice");
+  });
+}
+
+// ─── Giao diện: sáng / tối / theo hệ thống ────────────────────────────────────
+function getThemePreference() {
   const saved = localStorage.getItem("app-theme");
-  const theme = saved === "dark" ? "dark" : "light";
-  document.documentElement.setAttribute("data-theme", theme);
-  document.documentElement.setAttribute("data-bs-theme", theme);
-  updateThemeUI(theme);
+  return ["light", "dark", "system"].includes(saved) ? saved : "system";
+}
+
+function resolveTheme(pref) {
+  if (pref === "system") {
+    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  return pref;
+}
+
+function applyTheme(pref) {
+  const theme = resolveTheme(pref);
+  const html = document.documentElement;
+  html.setAttribute("data-theme", theme);
+  html.setAttribute("data-bs-theme", theme);
+  updateThemeUI(pref, theme);
+}
+
+function setThemePreference(pref) {
+  localStorage.setItem("app-theme", pref);
+  applyTheme(pref);
+}
+
+// Nút trên thanh điều hướng: Sáng → Tối → Theo hệ thống
+function cycleTheme() {
+  const order = ["light", "dark", "system"];
+  const next = order[(order.indexOf(getThemePreference()) + 1) % order.length];
+  setThemePreference(next);
+  const labels = { light: "Giao diện sáng", dark: "Giao diện tối", system: "Theo hệ thống" };
+  showToast(labels[next], "info", { delay: 1500 });
+}
+
+function updateThemeUI(pref, theme) {
+  const icon = pref === "system" ? "monitor" : theme === "dark" ? "moon" : "sun";
+  const iconContainer = document.getElementById("themeIcon");
+  if (iconContainer) {
+    iconContainer.innerHTML = `<i data-lucide="${icon}"></i>`;
+    if (window.lucide) lucide.createIcons({ root: iconContainer });
+  }
+  const labels = { light: "sáng", dark: "tối", system: "theo hệ thống" };
+  refs.themeToggleBtn?.setAttribute(
+    "aria-label",
+    `Giao diện hiện tại: ${labels[pref]}. Nhấn để đổi`
+  );
+  refs.themeSeg?.querySelectorAll("[data-theme-pref]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(btn.dataset.themePref === pref));
+  });
+}
+
+function initTheme() {
+  applyTheme(getThemePreference());
+  syncGoalSeg();
 }
 
 function startRouterOnce() {
@@ -375,7 +541,14 @@ window.updateStreakHeaderUI = function(streakCount, streakActive) {
   
   if (!badge || !icon || !countText) return;
   
+  window.__streakState = { count: streakCount, active: Boolean(streakActive) };
   countText.textContent = streakCount;
+  badge.setAttribute(
+    "aria-label",
+    streakCount > 0
+      ? `Chuỗi học ${streakCount} ngày${streakActive ? ", hôm nay đã học" : ", hôm nay chưa học"}`
+      : "Chưa có chuỗi học tập"
+  );
   
   if (streakCount > 0 && streakActive) {
     badge.classList.remove("inactive");
@@ -436,6 +609,10 @@ function init() {
       const userSnap = await getDoc(userRef);
       if (userSnap.exists()) {
         const data = userSnap.data();
+        window.__appUser = {
+          dailyActivity: data.dailyActivity || {},
+          totalPoints: data.totalPoints || 0
+        };
         const streakCount = data.streakCount || 0;
         const lastStreakDate = data.lastStreakDate || "";
         const todayStr = new Date().toLocaleDateString('sv-SE');
